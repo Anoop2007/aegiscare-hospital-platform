@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareAura Health OS | Indian Hospital Resource & Availability Platform</title>
+  <meta name="description" content="CareAura Health OS optimizes doctor availability, intelligent appointment scheduling, patient flow, and clinical resource allocation across Indian multi-specialty hospitals." />
+  <link rel="icon" type="image/svg+xml" href="/assets/brand-logo.svg" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <!-- Chart.js CDN for Hospital Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Healthcare Pulse Intro Animation Overlay -->
+  <div id="intro-overlay" class="intro-overlay" onclick="dismissIntro()">
+    <div class="intro-content">
+      <div class="intro-logo-box">
+        <svg class="intro-pulse-svg" viewBox="0 0 100 40">
+          <polyline points="0,20 30,20 38,5 45,35 52,15 58,25 64,20 100,20" />
+        </svg>
+      </div>
+      <h1 class="intro-brand">CareAura Health OS</h1>
+      <p class="intro-tagline">Intelligent Hospital Appointment & Doctor Availability Optimization Platform</p>
+      <div class="intro-loader-bar"><div class="intro-loader-progress"></div></div>
+      <span class="intro-skip-hint">Click anywhere to proceed</span>
+    </div>
+  </div>
+
+  <!-- Authentication Hub Modal -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-card" style="max-width: 480px; position:relative; overflow:hidden;">
+      <button class="modal-close-btn" onclick="closeAuthModal()" style="position:absolute; top:12px; right:12px; z-index:10;">&times;</button>
+      <div class="modal-header" style="text-align:center; display:block; padding: 20px 24px 12px 24px; border-bottom:1px solid var(--border-subtle);">
+        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px;">
+          <img src="/assets/brand-logo.svg" alt="CareAura Logo" style="width:36px; height:36px;" />
+          <div style="text-align:left;">
+            <div style="font-size:1.25rem; font-weight:800; color:var(--text-primary); line-height:1.2;">CareAura Health OS</div>
+            <div style="font-size:0.75rem; color:var(--color-brand-teal); font-weight:600;">Indian Healthcare Access & Resource Platform</div>
+          </div>
+        </div>
+        <p style="font-size:0.8rem; color:var(--text-secondary); margin:0;">Secure digital portal for patients, physicians, and clinical hospital administration</p>
+      </div>
+      <div class="modal-body" style="padding: 18px 24px;">
+        <!-- Global Auth Error Alert -->
+        <div class="auth-error-alert" id="auth-modal-error"></div>
+
+        <div class="auth-tabs">
+          <button class="auth-tab-btn active" id="auth-tab-otp-btn" onclick="switchAuthTab('otp')">Mobile OTP (+91)</button>
+          <button class="auth-tab-btn" id="auth-tab-email-btn" onclick="switchAuthTab('email')">Continue with Email</button>
+          <button class="auth-tab-btn" id="auth-tab-reg-btn" onclick="switchAuthTab('reg')">Sign Up</button>
+        </div>
+
+        <!-- Tab 1: Mobile OTP -->
+        <div id="auth-panel-otp">
+          <div id="otp-step-1">
+            <label class="form-label" style="font-weight:600; margin-bottom:6px;">Enter your 10-digit mobile number</label>
+            <div style="display:flex; gap:8px;">
+              <span style="display:flex; align-items:center; padding:0 14px; background:#f1f5f9; border:1px solid var(--border-medium); border-radius:var(--radius-md); font-weight:700; font-size:0.92rem; color:#334155;">+91</span>
+              <input type="tel" id="auth-otp-phone" class="form-control" placeholder="9876543210" maxlength="10" inputmode="numeric" style="font-size:1.02rem; font-weight:600; letter-spacing:0.5px;" oninput="onPhoneInputChange(this)" onkeydown="if(event.key==='Enter') sendMobileOTP()" />
+            </div>
+            <div id="auth-phone-error" style="display:none; font-size:0.8rem; color:#dc2626; margin-top:6px; font-weight:600;">Enter a valid 10-digit mobile number.</div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">Strictly 10 digits required (+91 India).</p>
+            <button id="btn-get-otp" class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="sendMobileOTP()">Get Verification Code</button>
+            <div style="display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.74rem; color:#065f46; background:#ecfdf5; border:1px solid #a7f3d0; padding:6px 10px; border-radius:6px; margin-top:12px;">
+              <span>🔒 256-Bit SSL End-to-End Encrypted Session • ABDM & HIPAA Certified</span>
+            </div>
+          </div>
+
+          <div id="otp-step-2" style="display:none; text-align:center;">
+            <h4 style="font-size:1.05rem; font-weight:700; margin-bottom:4px; color:var(--text-primary);">Enter the 6-digit OTP</h4>
+            <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:8px;">Verification code sent to <strong id="otp-masked-phone">+91 98765 *****</strong></p>
+            
+            <!-- 256-Bit SSL End-to-End Encrypted Security Badge -->
+            <div class="auth-security-badge" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:8px 12px; margin:12px 0 16px 0; font-size:0.76rem; color:#065f46;">
+              <span style="font-size:1rem;">🔒</span>
+              <span><strong>256-Bit SSL End-to-End Encrypted Session</strong> • ABDM Verified Gateway</span>
+            </div>
+
+            <!-- 6 Individual OTP Boxes -->
+            <div class="otp-box-row" id="otp-boxes-row" onpaste="handleOtpPaste(event)">
+              <input type="text" class="otp-digit" id="otp-d-0" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleOtpInput(this, 0)" onkeydown="handleOtpKey(event, 0)" />
+              <input type="text" class="otp-digit" id="otp-d-1" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleOtpInput(this, 1)" onkeydown="handleOtpKey(event, 1)" />
+              <input type="text" class="otp-digit" id="otp-d-2" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleOtpInput(this, 2)" onkeydown="handleOtpKey(event, 2)" />
+              <input type="text" class="otp-digit" id="otp-d-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleOtpInput(this, 3)" onkeydown="handleOtpKey(event, 3)" />
+              <input type="text" class="otp-digit" id="otp-d-4" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleOtpInput(this, 4)" onkeydown="handleOtpKey(event, 4)" />
+              <input type="text" class="otp-digit" id="otp-d-5" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleOtpInput(this, 5)" onkeydown="handleOtpKey(event, 5)" />
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin:12px 0;">
+              <span id="otp-timer-text" style="color:var(--text-muted);">Resend code in <strong>30s</strong></span>
+              <button id="otp-resend-btn" class="btn btn-secondary btn-sm" style="display:none;" onclick="sendMobileOTP()">Resend OTP</button>
+              <button class="btn btn-secondary btn-sm" onclick="resetOtpStep()">Change Number</button>
+            </div>
+            <button id="btn-verify-otp" class="btn btn-teal" style="width:100%;" onclick="verifyMobileOTP()">Verify & Continue</button>
+          </div>
+        </div>
+
+        <!-- Tab 2: Email Login -->
+        <div id="auth-panel-email" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Hospital Email ID</label>
+            <input type="email" id="auth-email-input" class="form-control" placeholder="doctor@caresync.in or user@email.in" onkeydown="if(event.key==='Enter') submitEmailLogin()" />
+          </div>
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label class="form-label">Password</label>
+              <a href="javascript:void(0)" style="font-size:0.75rem; color:var(--color-brand-primary);" onclick="showToast('Password reset link sent to registered email address.', 'info')">Forgot Password?</a>
+            </div>
+            <div style="position:relative;">
+              <input type="password" id="auth-password-input" class="form-control" placeholder="••••••••" onkeydown="if(event.key==='Enter') submitEmailLogin()" />
+              <button type="button" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); border:none; background:transparent; cursor:pointer; color:var(--text-muted);" onclick="togglePasswordVisibility('auth-password-input')">👁️</button>
+            </div>
+          </div>
+          <button id="btn-email-login" class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="submitEmailLogin()">Sign In to Hospital Portal</button>
+        </div>
+
+        <!-- Tab 3: Sign Up -->
+        <div id="auth-panel-reg" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">I am registering as a:</label>
+            <div style="display:flex; gap:10px;">
+              <label style="flex:1; display:flex; align-items:center; gap:8px; padding:10px; border:1px solid var(--border-medium); border-radius:var(--radius-md); cursor:pointer;">
+                <input type="radio" name="reg-role" value="patient" checked onchange="updateRegFields()" />
+                <span style="font-weight:600; font-size:0.85rem;">Patient</span>
+              </label>
+              <label style="flex:1; display:flex; align-items:center; gap:8px; padding:10px; border:1px solid var(--border-medium); border-radius:var(--radius-md); cursor:pointer;">
+                <input type="radio" name="reg-role" value="doctor" onchange="updateRegFields()" />
+                <span style="font-weight:600; font-size:0.85rem;">Doctor / Consultant</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="reg-name-input" class="form-control" placeholder="e.g. Ramesh Krishnan" />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="reg-email-input" class="form-control" placeholder="ramesh@gmail.com" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mobile (+91)</label>
+              <input type="tel" id="reg-phone-input" class="form-control" placeholder="9876543210" maxlength="10" inputmode="numeric" />
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Metro City</label>
+              <select id="reg-city-select" class="form-control">
+                <option value="Chennai">Chennai</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Bengaluru">Bengaluru</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Vijayawada">Vijayawada</option>
+                <option value="Pune">Pune</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Kochi">Kochi</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Preferred Language</label>
+              <select id="reg-lang-select" class="form-control">
+                <option value="English">English</option>
+                <option value="Hindi">Hindi</option>
+                <option value="Tamil">Tamil</option>
+                <option value="Telugu">Telugu</option>
+                <option value="Kannada">Kannada</option>
+                <option value="Malayalam">Malayalam</option>
+              </select>
+            </div>
+          </div>
+          <div id="reg-doctor-extra" style="display:none;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div class="form-group">
+                <label class="form-label">Clinical Specialization</label>
+                <input type="text" id="reg-doc-spec" class="form-control" placeholder="e.g. Cardiologist" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">NMC License Number</label>
+                <input type="text" id="reg-doc-lic" class="form-control" placeholder="NMC-TN-48912" />
+              </div>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="reg-pw-input" class="form-control" placeholder="Min 6 chars" oninput="checkPasswordStrength(this.value)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" id="reg-confirm-pw-input" class="form-control" placeholder="Re-enter password" />
+            </div>
+          </div>
+          <div class="pw-meter-bar"><div id="reg-pw-meter" class="pw-meter-fill"></div></div>
+          <button id="btn-create-account" class="btn btn-teal" style="width:100%; margin-top:12px;" onclick="submitRegistration()">Create Account</button>
+        </div>
+
+        <!-- Google Login Divider & Button -->
+        <div class="auth-divider"><span>or continue with</span></div>
+        <button class="btn-google" onclick="continueWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div style="text-align:center; margin-top:14px; padding-top:10px; border-top:1px dashed var(--border-subtle);">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeAuthModal()" style="font-size:0.84rem; font-weight:600; padding:8px 18px; border-radius:20px; background:#f0fdfa; color:#0d9488; border:1px solid #99f6e4;">
+            ⚡ Quick Enter / Skip to Platform &rarr;
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:center; padding:10px; background:#f8fafc;">
+        <span style="font-size:0.75rem; color:var(--text-muted);">Switch roles anytime using the Patient / Doctor / Admin pills in the top bar</span>
+      </div>
+    </div>
+  </div>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="/assets/brand-logo.svg" alt="CareAura Logo" class="brand-logo" />
+        <div class="brand-info">
+          <span class="brand-title">CareAura</span>
+          <span class="brand-sub">Health OS</span>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Patient Navigation Group -->
+        <div id="nav-group-patient">
+          <div class="nav-group-title">Patient Portal</div>
+          <ul class="nav-list">
+            <li>
+              <a class="nav-link active" data-view="patient-dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Dashboard Overview</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-view="patient-doctors">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Find Doctors</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-view="patient-hospitals">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+                <span>Indian Hospitals</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-view="patient-appointments">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                <span>My Appointments</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-view="patient-waitlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                <span>Standby Waitlist</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-view="patient-timeline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                <span>Clinical Timeline</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-view="patient-history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                <span>Medical History</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-view="patient-reports">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span>Health Reports</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-view="profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>My Profile</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-view="logout" onclick="handleLogout()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Sign Out</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Doctor Navigation Group (Un-numbered Clean View) -->
+        <div id="nav-group-doctor" style="display: none;">
+          <div class="nav-group-title">Physician Workspace</div>
+          <ul class="nav-list">
+            <li><a class="nav-link" data-view="doctor-dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Clinical Queue</span></a></li>
+            <li><a class="nav-link" data-view="doctor-appointments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><span>Appointments</span></a></li>
+            <li><a class="nav-link" data-view="doctor-schedule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Today's Schedule</span></a></li>
+            <li><a class="nav-link" data-view="doctor-calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg><span>Consultation Calendar</span></a></li>
+            <li><a class="nav-link" data-view="doctor-patients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><span>My Patients</span></a></li>
+            <li><a class="nav-link" data-view="doctor-patient-history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><span>Patient Records</span></a></li>
+            <li><a class="nav-link" data-view="doctor-reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Diagnostic Reports</span></a></li>
+            <li><a class="nav-link" data-view="doctor-notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>Consultation Notes</span></a></li>
+            <li><a class="nav-link" data-view="doctor-prescriptions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg><span>Electronic Rx</span></a></li>
+            <li><a class="nav-link" data-view="doctor-availability"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Roster & Hours</span></a></li>
+            <li><a class="nav-link" data-view="doctor-leave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg><span>Leave Management</span></a></li>
+            <li><a class="nav-link" data-view="doctor-queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span>Live Waiting Room</span></a></li>
+            <li><a class="nav-link" data-view="doctor-notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span>Clinical Alerts</span></a></li>
+            <li><a class="nav-link" data-view="doctor-workload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span>Workload Analytics</span></a></li>
+            <li><a class="nav-link" data-view="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Physician Profile</span></a></li>
+            <li><a class="nav-link" data-view="doctor-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Clinic Settings</span></a></li>
+            <li><a class="nav-link" data-view="logout" onclick="handleLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Sign Out</span></a></li>
+          </ul>
+        </div>
+
+        <!-- Admin Navigation Group (Un-numbered Clean View) -->
+        <div id="nav-group-admin" style="display: none;">
+          <div class="nav-group-title">Hospital Administration</div>
+          <ul class="nav-list">
+            <li><a class="nav-link" data-view="admin-dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg><span>Command Center</span></a></li>
+            <li><a class="nav-link" data-view="admin-doctors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Doctor Roster</span></a></li>
+            <li><a class="nav-link" data-view="admin-patients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Patients Registry</span></a></li>
+            <li><a class="nav-link" data-view="admin-hospitals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg><span>Hospital Facilities</span></a></li>
+            <li><a class="nav-link" data-view="admin-departments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M9 9h1"/><path d="M9 13h1"/><path d="M9 17h1"/></svg><span>Departments</span></a></li>
+            <li><a class="nav-link" data-view="admin-ledger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span>Operational Ledger</span></a></li>
+            <li><a class="nav-link" data-view="admin-availability"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Doctor Availability</span></a></li>
+            <li><a class="nav-link" data-view="admin-scheduling"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg><span>Shift Scheduling</span></a></li>
+            <li><a class="nav-link" data-view="admin-waitlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg><span>Waitlist Automation</span></a></li>
+            <li><a class="nav-link" data-view="admin-analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span>Resource Analytics</span></a></li>
+            <li><a class="nav-link" data-view="admin-insights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>AI Forecasting</span></a></li>
+            <li><a class="nav-link" data-view="admin-reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Audit Reports</span></a></li>
+            <li><a class="nav-link" data-view="admin-notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span>Announcements</span></a></li>
+            <li><a class="nav-link" data-view="admin-audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg><span>Governance Logs</span></a></li>
+            <li><a class="nav-link" data-view="admin-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Hospital Settings</span></a></li>
+            <li><a class="nav-link" data-view="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile / Sign Out</span></a></li>
+          </ul>
+        </div></div>
+
+      <div class="sidebar-footer">
+        <div class="user-quick-profile" onclick="navigateToView('profile')" style="cursor:pointer;" title="Click to view & edit your profile">
+          <div class="profile-avatar-badge" id="topbar-user-avatar-badge" style="width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg, #0d9488, #0284c7); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.92rem; box-shadow:0 2px 6px rgba(13,148,136,0.25);">AS</div>
+          <div class="user-meta">
+            <span class="user-name" id="topbar-user-name">Arjun Sharma</span>
+            <span class="user-role-badge" id="topbar-user-role">Patient • CA-MRN-48912</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn mobile-menu-btn" id="mobile-sidebar-toggle" onclick="toggleMobileSidebar()" style="display:none; margin-right:8px;" aria-label="Toggle Menu">☰</button>
+          <h1 class="page-title" id="topbar-page-title">Patient Portal Overview</h1>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Quick Role Switcher (Seamless Workspace Switching) -->
+          <div class="role-switcher-banner">
+            <button class="role-pill-btn active" data-role="patient">Patient (Arjun)</button>
+            <button class="role-pill-btn" data-role="doctor">Doctor (Dr. Sharma)</button>
+            <button class="role-pill-btn" data-role="admin">Admin (CMO)</button>
+          </div>
+
+          <!-- Notification Bell -->
+          <div style="position: relative;">
+            <button class="icon-btn" id="topbar-notif-btn" title="Hospital Notifications">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+              <span class="notification-badge" id="topbar-notif-badge">3</span>
+            </button>
+            <div id="notification-dropdown" style="display:none; position:absolute; right:0; top:48px; width:320px; background:#fff; border-radius:var(--radius-md); box-shadow:var(--shadow-xl); border:1px solid var(--border-subtle); z-index:110;">
+              <div style="padding:12px 16px; font-weight:700; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.88rem;">Notifications</span>
+                <button class="btn btn-secondary btn-sm" style="font-size:0.7rem; padding:2px 6px;" onclick="api.put('/patient/notifications/mark-all-read').then(() => loadNotificationDropdown())">Mark all read</button>
+              </div>
+              <div id="notification-dropdown-list" style="max-height:280px; overflow-y:auto;"></div>
+            </div>
+          </div>
+
+          <!-- AI Hospital Assistant Trigger -->
+          <button class="btn btn-teal btn-sm" onclick="ChatbotModule.toggleDrawer()">
+            💬 Clinical Assistant
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Dynamic Content Views -->
+      <main class="main-content">
+        <!-- 1. PATIENT DASHBOARD VIEW -->
+        <section class="view-section active" id="view-patient-dashboard">
+          <!-- Standby Released Slot Alert Banner -->
+          <div id="pat-standby-offer-container"></div>
+
+          <!-- Real-Time Patient Live Queue Tracker Widget -->
+          <div id="pat-live-queue-container"></div>
+
+          <div id="pat-hero-appointment-container"></div>
+
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="pat-total-appts">-</span>
+                <span class="stat-label">Total Appointments</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-teal">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="pat-completed-appts">-</span>
+                <span class="stat-label">Completed Visits</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="pat-total-reports">-</span>
+                <span class="stat-label">Verified Lab Reports</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="pat-unread-notes">-</span>
+                <span class="stat-label">Active Alerts</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            <div class="clinical-card">
+              <div class="card-header-flex">
+                <h3 class="card-title">Recent Medical Activity</h3>
+                <button class="btn btn-secondary btn-sm" onclick="navigateToView('patient-history')">View Full History</button>
+              </div>
+              <div id="pat-recent-activity-list"></div>
+            </div>
+
+            <div class="clinical-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h3 class="card-title" style="margin-bottom: 8px;">Clinical Quick Actions</h3>
+                <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 16px;">
+                  Schedule appointments, view diagnostic summaries, or query the clinical assistant.
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <button class="btn btn-primary" onclick="PatientModule.openBookingModal()">
+                    ⚡ Book an Appointment
+                  </button>
+                  <button class="btn btn-teal" onclick="navigateToView('patient-doctors')">
+                    🔍 Browse Available Doctors
+                  </button>
+                  <button class="btn btn-secondary" onclick="PatientModule.generateAIHealthSummary()">
+                    📄 Generate AI Health Summary
+                  </button>
+                </div>
+              </div>
+              <div style="margin-top: 20px; padding: 12px; background: var(--bg-surface-alt); border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-secondary);">
+                Hospital Central Helpline: <strong>(555) 019-4800</strong><br/>
+                Emergency Trauma Unit: <strong>Gate 1, Ground Floor</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. PATIENT DOCTOR DISCOVERY VIEW -->
+        <section class="view-section" id="view-patient-doctors">
+          <div class="filter-bar">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="pat-search-doctor" placeholder="Search doctor by name or specialty..." oninput="PatientModule.loadDoctorDirectory()" />
+            </div>
+            <select class="filter-select" id="pat-filter-dept" onchange="PatientModule.loadDoctorDirectory()">
+              <option value="">All Departments</option>
+              <option value="1">Cardiology & Vascular</option>
+              <option value="2">Neurology & Stroke</option>
+              <option value="3">Orthopedics & Sports</option>
+              <option value="4">Pediatrics & Adolescent</option>
+              <option value="5">Oncology & Hematology</option>
+              <option value="6">Internal Medicine</option>
+            </select>
+            <select class="filter-select" id="pat-filter-mode" onchange="PatientModule.loadDoctorDirectory()">
+              <option value="">All Consultation Modes</option>
+              <option value="In-Person">In-Person Only</option>
+              <option value="Video">Telehealth Video</option>
+            </select>
+            <select class="filter-select" id="pat-filter-avail" onchange="PatientModule.loadDoctorDirectory()">
+              <option value="">All Availability</option>
+              <option value="available">Available Now</option>
+            </select>
+            <button class="btn btn-primary btn-sm" id="btn-doc-location-detect" onclick="PatientModule.sortByNearest('doctors')" title="Sort doctors by nearest to your GPS location">
+              📍 Nearest to Me
+            </button>
+            <button class="btn btn-teal btn-sm" onclick="PatientModule.openBookingModal()">
+              ✨ AI Smart Doctor Finder
+            </button>
+          </div>
+          <div class="doctor-grid" id="pat-doctor-grid"></div>
+        </section>
+
+        <!-- 3. PATIENT APPOINTMENTS VIEW -->
+        <section class="view-section" id="view-patient-appointments">
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" onclick="PatientModule.loadAppointmentsList('all')">All</button>
+                <button class="btn btn-secondary btn-sm" onclick="PatientModule.loadAppointmentsList('upcoming')">Upcoming</button>
+                <button class="btn btn-secondary btn-sm" onclick="PatientModule.loadAppointmentsList('completed')">Completed</button>
+                <button class="btn btn-secondary btn-sm" onclick="PatientModule.loadAppointmentsList('cancelled')">Cancelled</button>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="PatientModule.openBookingModal()">
+                + Book New Consultation
+              </button>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Ref #</th>
+                    <th>Physician</th>
+                    <th>Schedule</th>
+                    <th>Mode</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="pat-appointments-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. PATIENT MEDICAL HISTORY VIEW -->
+        <section class="view-section" id="view-patient-history">
+          <div id="pat-medical-history-container"></div>
+        </section>
+
+        <!-- 5. PATIENT HEALTH REPORTS VIEW -->
+        <section class="view-section" id="view-patient-reports">
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <div style="display:flex; gap:12px; align-items:center;">
+                <input type="text" class="form-control" id="pat-report-search" placeholder="Search lab reports..." style="width:240px;" oninput="PatientModule.loadHealthReports()"/>
+                <select class="filter-select" id="pat-report-type-filter" onchange="PatientModule.loadHealthReports()">
+                  <option value="all">All Report Types</option>
+                  <option value="Blood Panel">Blood & Metabolic Panels</option>
+                  <option value="Cardiology/ECG">Cardiology & ECG</option>
+                  <option value="Radiology/MRI">Radiology & MRI</option>
+                </select>
+              </div>
+              <button class="btn btn-teal btn-sm" onclick="PatientModule.generateAIHealthSummary()">
+                📄 AI Summary Digest
+              </button>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Document Title</th>
+                    <th>Category</th>
+                    <th>Test Date</th>
+                    <th>Clinical Facility</th>
+                    <th>File Archival</th>
+                    <th style="text-align:right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="pat-reports-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. PATIENT STANDBY WAITLIST VIEW -->
+        <section class="view-section" id="view-patient-waitlist">
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Standby Priority Waitlist</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">
+                  Auto-standby system monitors real-time cancellations. When a slot opens, the platform automatically re-allocates it to priority patients.
+                </p>
+              </div>
+              <button class="btn btn-teal btn-sm" onclick="PatientModule.openJoinWaitlistModal()">
+                + Join Standby Waitlist
+              </button>
+            </div>
+            <div id="pat-waitlist-cards-container" style="display:flex; flex-direction:column; gap:12px; margin-top:14px;"></div>
+          </div>
+        </section>
+
+        <!-- 7. PATIENT UNIFIED CLINICAL TIMELINE VIEW -->
+        <section class="view-section" id="view-patient-timeline">
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Unified Patient Longitudinal Health Timeline</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Integrated chronological continuum combining doctor consultations, objective diagnoses, prescriptions, and laboratory reports.</p>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn btn-secondary btn-sm" onclick="PatientModule.filterTimeline('all')">All Events</button>
+                <button class="btn btn-secondary btn-sm" onclick="PatientModule.filterTimeline('appointment')">Consultations</button>
+                <button class="btn btn-secondary btn-sm" onclick="PatientModule.filterTimeline('diagnosis')">Diagnoses</button>
+                <button class="btn btn-secondary btn-sm" onclick="PatientModule.filterTimeline('prescription')">Prescriptions</button>
+                <button class="btn btn-secondary btn-sm" onclick="PatientModule.filterTimeline('report')">Lab Reports</button>
+              </div>
+            </div>
+            <div id="pat-timeline-container" class="timeline-container" style="margin-top:20px;"></div>
+          </div>
+        </section>
+
+        <!-- 8. DOCTOR CLINICAL QUEUE VIEW -->
+        <section class="view-section" id="view-doctor-dashboard">
+          <!-- Workload Balancing Suggestion Alert -->
+          <div id="doc-workload-insight-container"></div>
+
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="doc-stat-waiting">-</span>
+                <span class="stat-label">Patients Waiting</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="doc-stat-inprogress">-</span>
+                <span class="stat-label">In-Consultation</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-teal">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="doc-stat-completed">-</span>
+                <span class="stat-label">Completed Today</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="doc-stat-workload">-</span>
+                <span class="stat-label">Shift Capacity Load</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Today's Patient Consultation Queue</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Real-time clinical queue with integrated electronic health documentation.</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary btn-sm" id="doc-toggle-avail-btn" onclick="DoctorModule.toggleAvailability()">
+                  Toggle Duty Status
+                </button>
+              </div>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Slot Time</th>
+                    <th>Patient Name & MRN</th>
+                    <th>Mode</th>
+                    <th>Status</th>
+                    <th>Reason for Visit</th>
+                    <th style="text-align:right;">Clinical Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="doc-queue-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. DOCTOR AVAILABILITY SCHEDULE VIEW -->
+        <section class="view-section" id="view-doctor-availability">
+          <div class="clinical-card" style="margin-bottom:24px;">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Weekly Clinic Roster & Hours</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Configure active clinic days, consultation slot duration, and lunch/break blocks.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="DoctorModule.saveAvailabilitySchedule()">
+                💾 Save Weekly Schedule
+              </button>
+            </div>
+            <div id="doc-schedule-grid"></div>
+          </div>
+
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <h3 class="card-title">Leaves, Surgeries & Unavailable Blocks</h3>
+              <button class="btn btn-secondary btn-sm" onclick="DoctorModule.openAddLeaveModal()">
+                + Record Leave / Block
+              </button>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Block Time Interval</th>
+                    <th>Category</th>
+                    <th>Clinical Rationale</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="doc-leaves-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. DOCTOR WORKLOAD VIEW -->
+        <section class="view-section" id="view-doctor-workload">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="doc-metric-total">-</span>
+                <span class="stat-label">Total Patients Treated</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-teal">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="doc-metric-utilization">-</span>
+                <span class="stat-label">Today's Utilization</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-rose">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="doc-metric-noshow">-</span>
+                <span class="stat-label">No-Show Rate</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="doc-metric-peak">-</span>
+                <span class="stat-label">Peak Clinic Hour</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 9. ADMIN OVERVIEW VIEW -->
+        <section class="view-section" id="view-admin-dashboard">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="adm-stat-doctors">-</span>
+                <span class="stat-label">Active Doctors</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-teal">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="adm-stat-patients">-</span>
+                <span class="stat-label">Enrolled Patients</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="adm-stat-today-total">-</span>
+                <span class="stat-label">Today's Total Appts</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="adm-stat-today-waiting">-</span>
+                <span class="stat-label">Current Queue Waiting</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            <div class="clinical-card">
+              <div class="card-header-flex">
+                <h3 class="card-title">Real-Time Doctor Availability & Schedule Load</h3>
+                <button class="btn btn-secondary btn-sm" onclick="navigateToView('admin-doctors')">Manage Roster</button>
+              </div>
+              <div id="adm-doctor-roster-list"></div>
+            </div>
+
+            <div class="clinical-card">
+              <h3 class="card-title" style="margin-bottom:12px;">Administrative Actions</h3>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="btn btn-primary" onclick="AdminModule.openAddDoctorModal()">
+                  + Onboard New Doctor
+                </button>
+                <button class="btn btn-teal" onclick="AdminModule.openAddDepartmentModal()">
+                  + Create Department
+                </button>
+                <button class="btn btn-secondary" onclick="AdminModule.openAnnouncementModal()">
+                  📢 Broadcast Announcement
+                </button>
+                <button class="btn btn-secondary" onclick="navigateToView('admin-analytics')">
+                  📊 View Operational Charts
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10. ADMIN AI FORECASTING & BOTTLENECK INSIGHTS VIEW -->
+        <section class="view-section" id="view-admin-insights">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="ai-stat-pred-demand">-</span>
+                <span class="stat-label">Tomorrow's Forecast Demand</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="ai-stat-pred-cancels">-</span>
+                <span class="stat-label">Expected Cancellations</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="ai-stat-pred-noshows">-</span>
+                <span class="stat-label">Estimated No-Show Risk</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-teal">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value" id="ai-stat-waitlist-fill">-</span>
+                <span class="stat-label">Standby Backfill Opportunities</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Capacity Bottlenecks Container -->
+          <div class="clinical-card" style="margin-bottom:20px;">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Real-Time Bottleneck & Overload Analysis</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Predictive detection of department constraints, overbooked clinic hours, and physician shift burnout risks.</p>
+              </div>
+              <button class="btn btn-teal btn-sm" onclick="AdminModule.loadAIInsights()">
+                🔄 Refresh Forecast Model
+              </button>
+            </div>
+            <div id="ai-bottlenecks-list"></div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+            <div class="clinical-card">
+              <h3 class="card-title" style="margin-bottom:12px;">Hourly Patient Traffic Distribution</h3>
+              <div style="height:250px;">
+                <canvas id="chart-forecast-hours"></canvas>
+              </div>
+            </div>
+            <div class="clinical-card">
+              <h3 class="card-title" style="margin-bottom:12px;">Department Capacity Utilization</h3>
+              <div style="height:250px;">
+                <canvas id="chart-forecast-dept"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Workload Redistribution Recommendations -->
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:10px;">AI Workload Balancing & Shift Redistribution Guidance</h3>
+            <div id="ai-workload-recommendations"></div>
+          </div>
+        </section>
+
+        <!-- 11. ADMIN WAITLIST AUTOMATION VIEW -->
+        <section class="view-section" id="view-admin-waitlist">
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title">Hospital Standby Waitlist & Auto-Allocation Engine</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Centralized queue ranking standby patients by urgency, waiting duration, and slot flexibility.</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn btn-teal btn-sm" onclick="AdminModule.autoAllocateWaitlist()">
+                  ⚡ Trigger Auto-Reallocation
+                </button>
+              </div>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Waitlist ID</th>
+                    <th>Patient Name & MRN</th>
+                    <th>Department</th>
+                    <th>Physician</th>
+                    <th>Priority</th>
+                    <th>Time Window</th>
+                    <th>Strategy</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adm-waitlist-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 12. ADMIN DOCTOR ROSTER VIEW -->
+        <section class="view-section" id="view-admin-doctors">
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <h3 class="card-title">Hospital Medical Practitioners</h3>
+              <button class="btn btn-primary btn-sm" onclick="AdminModule.openAddDoctorModal()">+ Add Doctor</button>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Doctor Name & Email</th>
+                    <th>Department</th>
+                    <th>Specialty</th>
+                    <th>Experience</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adm-doctors-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 11. ADMIN DEPARTMENTS VIEW -->
+        <section class="view-section" id="view-admin-departments">
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <h3 class="card-title">Hospital Clinical Departments</h3>
+              <button class="btn btn-primary btn-sm" onclick="AdminModule.openAddDepartmentModal()">+ Add Department</button>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Department Name</th>
+                    <th>Floor Location</th>
+                    <th>Contact</th>
+                    <th>Staffing</th>
+                    <th>Total Volume</th>
+                  </tr>
+                </thead>
+                <tbody id="adm-departments-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 12. ADMIN APPOINTMENTS MASTER LEDGER -->
+        <section class="view-section" id="view-admin-ledger">
+          <div class="clinical-card">
+            <div class="card-header-flex">
+              <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                <input type="text" class="form-control" id="adm-search-query" placeholder="Filter patient/doctor/ref..." style="width:200px;" oninput="AdminModule.loadAppointmentsLedger()"/>
+                <select class="filter-select" id="adm-filter-status" onchange="AdminModule.loadAppointmentsLedger()">
+                  <option value="all">All Statuses</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="in_progress">In-Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="no_show">No-Show</option>
+                </select>
+                <select class="filter-select" id="adm-filter-priority" onchange="AdminModule.loadAppointmentsLedger()">
+                  <option value="all">All Priorities</option>
+                  <option value="routine">Routine</option>
+                  <option value="follow_up">Follow-Up</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Appt ID</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Scheduled</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Reason</th>
+                  </tr>
+                </thead>
+                <tbody id="adm-appointments-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 13. ADMIN ANALYTICS VIEW -->
+        <section class="view-section" id="view-admin-analytics">
+          <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px; margin-bottom:20px;">
+            <div class="clinical-card">
+              <h3 class="card-title" style="margin-bottom:12px;">7-Day Hospital Appointment Demand Trend</h3>
+              <div style="height:260px;">
+                <canvas id="chart-demand"></canvas>
+              </div>
+            </div>
+            <div class="clinical-card">
+              <h3 class="card-title" style="margin-bottom:12px;">Department Volume Distribution</h3>
+              <div style="height:260px;">
+                <canvas id="chart-dept-workload"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:12px;">Doctor Shift Utilization Rates (%)</h3>
+            <div style="height:240px;">
+              <canvas id="chart-utilization"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- 14. ADMIN AUDIT LOGS VIEW -->
+        <section class="view-section" id="view-admin-audit">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:16px;">HIPAA & Operational Governance Audit Trail</h3>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp (UTC)</th>
+                    <th>User Identity</th>
+                    <th>Action</th>
+                    <th>Resource Target</th>
+                    <th>Action Metadata</th>
+                  </tr>
+                </thead>
+                <tbody id="adm-audit-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      
+        <!-- PATIENT HOSPITALS VIEW -->
+        <section class="view-section" id="view-patient-hospitals">
+          <div class="section-header-bar" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+            <div>
+              <h2 style="font-size:1.3rem; font-weight:700;">Multi-Specialty Indian Hospitals</h2>
+              <p style="color:var(--text-secondary); font-size:0.85rem;">Accredited healthcare centers, specialty institutes & 24x7 trauma wings</p>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <select id="hosp-city-filter" class="filter-select" onchange="PatientModule.filterHospitals()">
+                <option value="all">All Cities</option>
+                <option value="Chennai">Chennai</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Bengaluru">Bengaluru</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Vijayawada">Vijayawada</option>
+                <option value="Pune">Pune</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Kochi">Kochi</option>
+              </select>
+              <input type="text" id="hosp-search-input" class="form-control" style="width:200px; padding:7px 12px; font-size:0.84rem;" placeholder="Search hospital or locality..." oninput="PatientModule.filterHospitals()" />
+              <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; cursor:pointer; font-weight:500;">
+                <input type="checkbox" id="hosp-emergency-toggle" onchange="PatientModule.filterHospitals()" />
+                <span>24x7 Emergency</span>
+              </label>
+              <button class="btn btn-primary btn-sm" id="btn-hosp-location-detect" onclick="PatientModule.sortByNearest('hospitals')" title="Sort accredited hospitals by GPS proximity">
+                📍 Nearest to Me
+              </button>
+            </div>
+          </div>
+          <div id="patient-hospitals-grid" class="doctor-grid"></div>
+        </section>
+
+        <!-- DYNAMIC CLINICAL PROFILE VIEW -->
+        <section class="view-section" id="view-profile">
+          <div class="profile-container">
+            <div class="profile-header-card">
+              <div class="profile-avatar-initials-badge" id="prof-avatar-badge" style="width:76px; height:76px; font-size:1.85rem;">
+                <span id="prof-avatar-letters">AS</span>
+              </div>
+              <div class="profile-main-meta">
+                <div class="profile-name-row">
+                  <h2 id="prof-full-name">Arjun Sharma</h2>
+                  <span id="prof-role-badge" class="status-badge badge-confirmed">PATIENT</span>
+                </div>
+                <div class="profile-sub-meta">
+                  <span id="prof-identifier">Patient ID: CA-MRN-48912</span>
+                  <span id="prof-email">arjun.sharma@careaura.in</span>
+                  <span id="prof-city">📍 Chennai, Tamil Nadu</span>
+                  <span id="prof-language">🗣️ English, Hindi, Tamil</span>
+                </div>
+              </div>
+              <div class="profile-actions">
+                <button class="btn btn-primary btn-sm" onclick="openEditProfileModal()">✏️ Edit Profile</button>
+              </div>
+            </div>
+
+            <!-- Dynamic Profile Details Grid -->
+            <div class="profile-details-grid" id="prof-details-grid"></div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: APPOINTMENTS -->
+        <section class="view-section" id="view-doctor-appointments">
+          <div class="clinical-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <div>
+                <h3 class="card-title">Consultation Ledger & Patient Bookings</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Manage scheduled, in-progress, completed, and rescheduled appointments</p>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" onclick="DoctorModule.loadAppointments('all')">All</button>
+                <button class="btn btn-secondary btn-sm" onclick="DoctorModule.loadAppointments('scheduled')">Scheduled</button>
+                <button class="btn btn-secondary btn-sm" onclick="DoctorModule.loadAppointments('completed')">Completed</button>
+              </div>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead><tr><th>Time & ID</th><th>Patient</th><th>Type</th><th>Status</th><th>Reason</th><th style="text-align:right;">Actions</th></tr></thead>
+                <tbody id="doc-all-appts-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: TODAY'S SCHEDULE -->
+        <section class="view-section" id="view-doctor-schedule">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:14px;">Today's Clinical Roster & Consultation Time Slots</h3>
+            <div id="doc-schedule-timeline-container" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px;"></div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: CALENDAR -->
+        <section class="view-section" id="view-doctor-calendar">
+          <div class="clinical-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 class="card-title">Monthly Consultation Calendar</h3>
+              <span style="font-size:0.85rem; color:var(--text-muted);">Clinic OPD Working Hours: Mon - Sat (09:00 - 17:00 IST)</span>
+            </div>
+            <div id="doc-calendar-grid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; text-align:center;"></div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: MY PATIENTS -->
+        <section class="view-section" id="view-doctor-patients">
+          <div class="clinical-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 class="card-title">Registered Patients Directory</h3>
+              <input type="text" placeholder="Search by name or MRN..." class="form-control" style="width:240px; font-size:0.84rem;" oninput="DoctorModule.filterPatients(this.value)" />
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead><tr><th>Patient Name</th><th>MRN</th><th>City & Phone</th><th>Blood Group</th><th>Allergies</th><th style="text-align:right;">Chart</th></tr></thead>
+                <tbody id="doc-patients-list-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: PATIENT RECORDS & HISTORY -->
+        <section class="view-section" id="view-doctor-patient-history">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:14px;">Electronic Medical Records & Chart Review</h3>
+            <div id="doc-patient-history-viewer"><p style="color:var(--text-muted); font-size:0.85rem;">Select any patient from the Clinical Queue or Patients directory to view electronic medical records.</p></div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: DIAGNOSTIC REPORTS -->
+        <section class="view-section" id="view-doctor-reports">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:14px;">Diagnostic Lab & Radiology Reports</h3>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead><tr><th>Report Title</th><th>Type</th><th>Patient</th><th>Facility</th><th>Date</th><th style="text-align:right;">Action</th></tr></thead>
+                <tbody id="doc-reports-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: CONSULTATION NOTES -->
+        <section class="view-section" id="view-doctor-notes">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:14px;">Clinical Consultation Notes Archive</h3>
+            <div id="doc-notes-archive-container"></div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: ELECTRONIC PRESCRIPTIONS -->
+        <section class="view-section" id="view-doctor-prescriptions">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:14px;">Issued Electronic Prescriptions (Rx)</h3>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead><tr><th>Rx Date</th><th>Patient</th><th>Medications Documented</th><th>Instructions</th><th style="text-align:right;">Print / View</th></tr></thead>
+                <tbody id="doc-prescriptions-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: LEAVE MANAGEMENT -->
+        <section class="view-section" id="view-doctor-leave">
+          <div class="stat-grid" style="grid-template-columns:1fr 2fr; gap:20px;">
+            <div class="clinical-card">
+              <h3 class="card-title" style="margin-bottom:12px;">Request Clinic Leave</h3>
+              <div class="form-group">
+                <label class="form-label">Leave Type</label>
+                <select class="form-control" id="doc-leave-type"><option value="Casual Leave">Casual Leave</option><option value="Medical Leave">Medical Leave</option><option value="Conference / Academic">Conference / Academic</option></select>
+              </div>
+              <div class="form-group"><label class="form-label">Start Date</label><input type="date" class="form-control" id="doc-leave-start" /></div>
+              <div class="form-group"><label class="form-label">End Date</label><input type="date" class="form-control" id="doc-leave-end" /></div>
+              <div class="form-group"><label class="form-label">Reason</label><textarea class="form-control" id="doc-leave-reason" placeholder="Details..."></textarea></div>
+              <button class="btn btn-primary" onclick="DoctorModule.submitLeaveRequest()">Submit Request</button>
+            </div>
+            <div class="clinical-card">
+              <h3 class="card-title" style="margin-bottom:12px;">Upcoming & Past Leave Records</h3>
+              <div id="doc-leave-history-list"><p style="color:var(--text-muted); font-size:0.85rem;">No active leave requests submitted this month.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: LIVE WAITING ROOM QUEUE -->
+        <section class="view-section" id="view-doctor-queue">
+          <div class="clinical-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 class="card-title">Live Waiting Room Monitor</h3>
+              <button class="btn btn-teal btn-sm" onclick="DoctorModule.loadQueue()">🔄 Refresh Queue</button>
+            </div>
+            <div id="doc-queue-expanded-container"></div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: CLINICAL NOTIFICATIONS -->
+        <section class="view-section" id="view-doctor-notifications">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:14px;">Clinical Alerts & Roster Updates</h3>
+            <div id="doc-notifications-list"></div>
+          </div>
+        </section>
+
+        <!-- DOCTOR VIEW: CLINIC SETTINGS -->
+        <section class="view-section" id="view-doctor-settings">
+          <div class="clinical-card" style="max-width:680px;">
+            <h3 class="card-title" style="margin-bottom:16px;">Physician Practice & OPD Settings</h3>
+            <div class="form-group">
+              <label class="form-label">Consultation Fee (₹ INR)</label>
+              <input type="number" id="doc-setting-fee" class="form-control" value="800" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Slot Consultation Duration (Minutes)</label>
+              <select class="form-control" id="doc-setting-duration"><option value="15">15 mins</option><option value="20" selected>20 mins</option><option value="30">30 mins</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Languages Spoken</label>
+              <input type="text" id="doc-setting-langs" class="form-control" value="English, Hindi, Tamil" />
+            </div>
+            <button class="btn btn-teal" onclick="DoctorModule.saveSettings()">Save OPD Preferences</button>
+          </div>
+        </section>
+
+        <!-- ADMIN VIEW: PATIENTS REGISTRY -->
+        <section class="view-section" id="view-admin-patients">
+          <div class="clinical-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 class="card-title">Hospital Master Patient Registry</h3>
+              <input type="text" placeholder="Search MRN or name..." class="form-control" style="width:240px; font-size:0.84rem;" oninput="AdminModule.filterPatients(this.value)" />
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead><tr><th>Patient MRN</th><th>Full Name</th><th>City</th><th>Language</th><th>Blood Group</th><th>Allergies</th></tr></thead>
+                <tbody id="adm-patients-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ADMIN VIEW: HOSPITAL FACILITIES -->
+        <section class="view-section" id="view-admin-hospitals">
+          <div class="clinical-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 class="card-title">Hospital Facilities & Metro Units Directory</h3>
+              <span style="font-size:0.82rem; color:var(--text-muted);">12 Partner Facilities Active Across Indian Metros</span>
+            </div>
+            <div class="clinical-table-container">
+              <table class="clinical-table">
+                <thead><tr><th>Facility</th><th>City & Locality</th><th>Bed Capacity</th><th>ICU Beds</th><th>24x7 Emergency</th><th>Base Fee (₹)</th><th>Rating</th></tr></thead>
+                <tbody id="adm-hospitals-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ADMIN VIEW: DOCTOR ROSTERS & AVAILABILITY -->
+        <section class="view-section" id="view-admin-availability">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:14px;">Physician Shift Availability & Working Rosters</h3>
+            <div id="adm-availability-roster-body"></div>
+          </div>
+        </section>
+
+        <!-- ADMIN VIEW: SHIFT SCHEDULING -->
+        <section class="view-section" id="view-admin-scheduling">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:14px;">Automated Shift Scheduling & Capacity Optimization</h3>
+            <div id="adm-scheduling-container">
+              <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:16px;">AI shift engine balances morning, evening, and on-call rotations based on historical patient arrival volume.</p>
+              <button class="btn btn-teal btn-sm" onclick="AdminModule.runScheduleOptimization()">⚡ Run AI Roster Optimizer</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ADMIN VIEW: COMPLIANCE & AUDIT REPORTS -->
+        <section class="view-section" id="view-admin-reports">
+          <div class="clinical-card">
+            <h3 class="card-title" style="margin-bottom:14px;">Hospital Operational & Clinical Governance Reports</h3>
+            <div id="adm-reports-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;"></div>
+          </div>
+        </section>
+
+        <!-- ADMIN VIEW: ANNOUNCEMENTS -->
+        <section class="view-section" id="view-admin-notifications">
+          <div class="clinical-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 class="card-title">Hospital Broadcast Announcements</h3>
+              <button class="btn btn-primary btn-sm" onclick="document.getElementById('announcement-modal').classList.add('active')">+ Create Announcement</button>
+            </div>
+            <div id="adm-announcements-list"></div>
+          </div>
+        </section>
+
+        <!-- ADMIN VIEW: SYSTEM SETTINGS -->
+        <section class="view-section" id="view-admin-settings">
+          <div class="clinical-card" style="max-width:680px;">
+            <h3 class="card-title" style="margin-bottom:16px;">CareSync Clinical OS Platform Settings</h3>
+            <div class="form-group"><label class="form-label">Hospital Operating System Region</label><input type="text" class="form-control" value="India (IST - UTC+5:30)" disabled /></div>
+            <div class="form-group"><label class="form-label">Currency Standard</label><input type="text" class="form-control" value="₹ (Indian Rupee - INR)" disabled /></div>
+            <div class="form-group"><label class="form-label">Standby Auto-Allocation Algorithm</label><select class="form-control"><option selected>Multi-Factor Clinical Suitability & Workload Balancing (Default)</option><option>Fastest Available Slot First</option><option>Continuity of Care First</option></select></div>
+            <div class="form-group"><label class="form-label">Max Shift Capacity per Physician</label><input type="number" class="form-control" value="25" /></div>
+            <button class="btn btn-teal" onclick="showToast('System configuration saved successfully.', 'success')">Save Global Settings</button>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- AI Hospital Assistant Floating Drawer -->
+  <div class="chat-drawer" id="chat-drawer">
+    <div class="chat-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.1rem;">🤖</span>
+        <div>
+          <div style="font-weight:700; font-size:0.9rem;" id="chat-active-title">CareSync Clinical Assistant</div>
+          <div style="font-size:0.65rem; color:#38bdf8;">Digital Hospital & Physician Search</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-secondary btn-sm" style="padding:2px 8px; font-size:0.75rem;" onclick="ChatbotModule.createNewConversation()">+ New</button>
+        <button class="btn btn-secondary btn-sm" style="padding:2px 8px; font-size:0.75rem;" onclick="ChatbotModule.clearConversation()">Clear</button>
+        <button class="icon-btn" style="border:none; color:#ffffff; width:28px; height:28px;" onclick="ChatbotModule.toggleDrawer()">✕</button>
+      </div>
+    </div>
+
+    <!-- Conversations Sub-drawer Bar -->
+    <div style="padding:6px 12px; background:var(--bg-surface-alt); border-bottom:1px solid var(--border-subtle); display:flex; gap:6px; align-items:center;">
+      <input type="text" placeholder="Search chats..." style="flex:1; padding:4px 8px; font-size:0.75rem; border:1px solid var(--border-medium); border-radius:4px;" oninput="ChatbotModule.loadConversations(this.value)"/>
+    </div>
+    <div id="chat-conv-list" style="max-height:85px; overflow-y:auto; border-bottom:1px solid var(--border-subtle); background:#ffffff;"></div>
+
+    <div class="chat-messages-container" id="chat-messages-container"></div>
+
+    <!-- Suggested Queries as per Section U -->
+    <div style="padding:6px 10px; background:#f8fafc; display:flex; gap:6px; overflow-x:auto; border-top:1px solid var(--border-subtle); white-space:nowrap;">
+      <button class="doc-chip" style="cursor:pointer; border:none; background:#eff6ff; color:#1d4ed8;" onclick="ChatbotModule.sendQuickPrompt('Find a cardiologist in Chennai')">❤️ Cardiologist in Chennai</button>
+      <button class="doc-chip" style="cursor:pointer; border:none; background:#f0fdf4; color:#15803d;" onclick="ChatbotModule.sendQuickPrompt('Show Tamil-speaking doctors')">🗣️ Tamil-speaking doctors</button>
+      <button class="doc-chip" style="cursor:pointer; border:none; background:#faf5ff; color:#7e22ce;" onclick="ChatbotModule.sendQuickPrompt('Find hospitals in Hyderabad')">🏥 Hospitals in Hyderabad</button>
+      <button class="doc-chip" style="cursor:pointer; border:none; background:#fff7ed; color:#c2410c;" onclick="ChatbotModule.sendQuickPrompt('Check my next appointment')">🗓️ Check my next appointment</button>
+      <button class="doc-chip" style="cursor:pointer; border:none; background:#ecfeff; color:#0e7490;" onclick="ChatbotModule.sendQuickPrompt('Show available dermatologists')">✨ Available dermatologists</button>
+      <button class="doc-chip" style="cursor:pointer; border:none; background:#fdf2f8; color:#be185d;" onclick="ChatbotModule.sendQuickPrompt('Find a Telugu-speaking doctor')">🗣️ Telugu-speaking doctor</button>
+    </div>
+
+    <div class="chat-input-area">
+      <input type="text" id="chat-input-field" class="form-control" placeholder="Ask for cardiologists, hospitals in Chennai, next appointment..." onkeydown="if(event.key==='Enter') ChatbotModule.sendMessage()"/>
+      <button class="btn btn-teal btn-sm" onclick="ChatbotModule.sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- MODALS CONTAINER -->
+
+  <!-- 1. Smart Booking Modal -->
+  <div class="modal-overlay" id="booking-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Smart Clinical Consultation Booking</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>AI Allocation & Optimization Strategy</span>
+            <span style="font-size:0.7rem; color:var(--color-brand-teal); font-weight:600;">24 Clinical Parameters</span>
+          </label>
+          <div class="strategy-grid" id="book-strategy-grid">
+            <div class="strategy-pill active" data-strategy="best_available" onclick="PatientModule.selectStrategy('best_available', this)">
+              <strong>⭐ Best Available</strong>
+              <span>Multi-Factor AI Engine</span>
+            </div>
+            <div class="strategy-pill" data-strategy="fastest_available" onclick="PatientModule.selectStrategy('fastest_available', this)">
+              <strong>⚡ Fastest Slot</strong>
+              <span>Shortest Queue Wait</span>
+            </div>
+            <div class="strategy-pill" data-strategy="preferred_doctor" onclick="PatientModule.selectStrategy('preferred_doctor', this)">
+              <strong>👨‍⚕️ Doctor Continuity</strong>
+              <span>Specific Physician</span>
+            </div>
+            <div class="strategy-pill" data-strategy="preferred_time" onclick="PatientModule.selectStrategy('preferred_time', this)">
+              <strong>⏰ Preferred Time</strong>
+              <span>Time-of-Day Window</span>
+            </div>
+            <div class="strategy-pill" data-strategy="balanced_workload" onclick="PatientModule.selectStrategy('balanced_workload', this)">
+              <strong>⚖️ Balanced Load</strong>
+              <span>Hospital Optimization</span>
+            </div>
+          </div>
+          <input type="hidden" id="book-strategy-input" value="best_available"/>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Department / Specialty</label>
+            <select class="form-control" id="book-dept-select" onchange="PatientModule.updateBookingDoctorSelect()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Consultation Urgency</label>
+            <select class="form-control" id="book-urgency-select">
+              <option value="routine">Routine Care / Preventive</option>
+              <option value="priority">Priority Consultation</option>
+              <option value="urgent">Urgent Clinical Need</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Time Window</label>
+            <select class="form-control" id="book-timewindow-select">
+              <option value="any">Any Time of Day</option>
+              <option value="morning">Morning (08:30 - 12:30)</option>
+              <option value="afternoon">Afternoon (13:30 - 17:00)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div class="form-group">
+            <label class="form-label">Consultation Type</label>
+            <select class="form-control" id="book-mode-select">
+              <option value="In-Person">In-Person Clinic Visit</option>
+              <option value="Video">Telehealth Video Consult</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Date</label>
+            <input type="date" class="form-control" id="book-date-input"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Reason for Visit / Symptoms</label>
+          <input type="text" class="form-control" id="book-reason-input" placeholder="e.g. Follow-up for blood pressure check, persistent headache..."/>
+        </div>
+
+        <!-- AI Assistant Recommendation Trigger -->
+        <div style="margin: 12px 0 16px;">
+          <button type="button" class="btn btn-teal btn-sm" onclick="PatientModule.triggerAISmartRecommendation()" style="width:100%; justify-content:center; padding:10px;">
+            🤖 Run Intelligent 24-Parameter Slot Optimization Engine
+          </button>
+          <div id="ai-recommendation-banner" style="margin-top:12px; display:none;"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Selected Physician</label>
+          <select class="form-control" id="book-doctor-select" onchange="PatientModule.fetchAvailableSlots()"></select>
+        </div>
+
+        <div id="slot-selection-container" style="margin-top:14px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" onclick="PatientModule.submitBooking()">Confirm Consultation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Reschedule Modal -->
+  <div class="modal-overlay" id="reschedule-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Reschedule Appointment</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="reschedule-appt-id"/>
+        <div class="form-group">
+          <label class="form-label">New Appointment Date</label>
+          <input type="date" class="form-control" id="reschedule-date-input"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Appointment Time</label>
+          <input type="time" class="form-control" id="reschedule-time-input"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reason for Rescheduling</label>
+          <textarea class="form-control" id="reschedule-reason-input" placeholder="Please specify why you are rescheduling..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Close</button>
+        <button class="btn btn-primary" onclick="PatientModule.submitReschedule()">Confirm New Time</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Cancel Modal -->
+  <div class="modal-overlay" id="cancel-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Cancel Appointment</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cancel-appt-id"/>
+        <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:14px;">
+          Are you sure you want to cancel this appointment? Cancelled slots will be immediately released back to waiting patients.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Reason for Cancellation (Required)</label>
+          <textarea class="form-control" id="cancel-reason-input" placeholder="e.g. Schedule conflict, feeling better, relocated..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Keep Appointment</button>
+        <button class="btn btn-danger" onclick="PatientModule.submitCancellation()">Confirm Cancellation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Telehealth Video Room Modal -->
+  <div class="modal-overlay" id="telehealth-modal">
+    <div class="modal-card modal-lg" style="max-width:960px;">
+      <div class="modal-header" style="background:#0f172a; color:#fff; border-bottom:1px solid #334155;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="pulse-dot"></span>
+          <h3 class="modal-title" style="color:#fff;">CareAura Telehealth Virtual Consultation Room</h3>
+        </div>
+        <button class="modal-close-btn" style="color:#fff;" onclick="PatientModule.closeTelehealthRoom()">&times;</button>
+      </div>
+      <div class="modal-body" style="background:#0b132b; padding:16px;">
+        <div class="telehealth-container">
+          <div class="video-screen">
+            <div class="video-status-tag">
+              <span class="pulse-dot"></span>
+              <span>Encrypted WebRTC Stream • Call Duration: <strong id="telehealth-timer">00:00</strong></span>
+            </div>
+            <div class="doctor-stream-placeholder">
+              <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150" style="width:110px; height:110px; border-radius:50%; border:3px solid #0284c7;" alt="Doctor Stream"/>
+              <div style="font-weight:700; font-size:1.1rem;">Dr. Priya Sharma, MD</div>
+              <div style="font-size:0.8rem; color:#94a3b8;">Cardiology & Vascular Medicine • Live Feed</div>
+            </div>
+            <div class="video-controls">
+              <button class="control-btn" title="Toggle Mic" onclick="showToast('Microphone toggled.', 'info')">🎤</button>
+              <button class="control-btn" title="Toggle Camera" onclick="showToast('Video camera active.', 'info')">📹</button>
+              <button class="control-btn end-call" title="End Consultation" onclick="PatientModule.closeTelehealthRoom()">📞</button>
+            </div>
+          </div>
+          <div class="telehealth-sidebar">
+            <h4 style="font-size:0.95rem; margin-bottom:8px; color:#38bdf8;">Telehealth Clinical Notes</h4>
+            <div style="font-size:0.8rem; color:#cbd5e1; line-height:1.4; flex:1; overflow-y:auto;">
+              • High-definition audio/video telemetry active.<br/>
+              • Connected to CareAura Central Hospital Node.<br/>
+              • Authorized clinical physician has access to historical ECGs and lab values.<br/>
+              • Digital prescriptions issued during this call will automatically appear in your health records.
+            </div>
+            <div style="margin-top:12px; border-top:1px solid #334155; padding-top:10px;">
+              <span style="font-size:0.72rem; color:#94a3b8;">Session Code: CA-TEL-8941 • ABDM & HIPAA Certified</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Consultation Notes Modal (Doctor Clinical Documentation) -->
+  <div class="modal-overlay" id="consultation-notes-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Clinical Consultation & Electronic Prescription</h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);" id="notes-patient-badge">Patient Chart</span>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="notes-modal-appt-id"/>
+        <div class="form-group">
+          <label class="form-label">Reported Symptoms & Chief Complaint</label>
+          <input type="text" class="form-control" id="notes-symptoms-input"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Clinical Examination & Observations (Objective Findings)</label>
+          <textarea class="form-control" id="notes-clinical-input" placeholder="Physical examination, heart/lung sounds, blood pressure, review of systems..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Clinical Diagnosis / ICD Assessment</label>
+          <input type="text" class="form-control" id="notes-diagnosis-input" placeholder="e.g. Stage 1 Essential Hypertension with mild tachycardia"/>
+        </div>
+
+        <!-- Interactive Prescription Pad -->
+        <div style="border:1px solid var(--border-medium); border-radius:var(--radius-md); padding:16px; margin:14px 0; background:var(--bg-surface-alt);">
+          <h4 style="font-size:0.92rem; margin-bottom:10px; color:var(--color-brand-primary);">Rx: Electronic Prescription Drug Pad</h4>
+          <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px; align-items:flex-end; margin-bottom:10px;">
+            <div>
+              <label class="form-label">Medication Name</label>
+              <input type="text" class="form-control" id="rx-drug-name" placeholder="e.g. Amlodipine Besylate"/>
+            </div>
+            <div>
+              <label class="form-label">Dosage</label>
+              <input type="text" class="form-control" id="rx-dosage" placeholder="5 mg"/>
+            </div>
+            <div>
+              <label class="form-label">Frequency</label>
+              <input type="text" class="form-control" id="rx-frequency" placeholder="Once daily"/>
+            </div>
+            <div>
+              <label class="form-label">Duration</label>
+              <input type="text" class="form-control" id="rx-duration" placeholder="30 days"/>
+            </div>
+            <button type="button" class="btn btn-teal btn-sm" onclick="DoctorModule.addPrescriptionItem()">+ Add</button>
+          </div>
+          <div id="rx-items-list"></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Recommended Follow-Up Date</label>
+            <input type="date" class="form-control" id="notes-followup-input"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Patient Recovery & Dietary Instructions</label>
+            <input type="text" class="form-control" id="notes-instructions-input" placeholder="e.g. Low sodium DASH diet, hydrate well..."/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" onclick="DoctorModule.submitConsultationNotes()">Sign & File Clinical Record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Generic Detail Modal (Reports, Histories, Details) -->
+  <div class="modal-overlay" id="generic-detail-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title" id="generic-detail-modal-title">Clinical Information</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" id="generic-detail-modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Leave / Unavailability Modal (Doctor) -->
+  <div class="modal-overlay" id="leave-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Record Leave / Unavailability Block</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Start Datetime</label>
+          <input type="datetime-local" class="form-control" id="leave-start-input"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Datetime</label>
+          <input type="datetime-local" class="form-control" id="leave-end-input"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Block Category</label>
+          <select class="form-control" id="leave-type-select">
+            <option value="leave">Personal / Vacation Leave</option>
+            <option value="surgery_block">Operating Room / Surgery Block</option>
+            <option value="emergency_call">On-Call Emergency Trauma Duty</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Clinical Reason</label>
+          <textarea class="form-control" id="leave-reason-input" placeholder="Brief clinical explanation..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" onclick="DoctorModule.submitLeaveBlock()">Save Block</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Add Doctor Modal (Admin) -->
+  <div class="modal-overlay" id="add-doctor-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Onboard New Medical Doctor</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Physician Full Name</label>
+            <input type="text" class="form-control" id="new-doc-name" placeholder="Dr. Full Name, MD"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hospital Email Address</label>
+            <input type="email" class="form-control" id="new-doc-email" placeholder="doctor.name@careaura.health"/>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" id="new-doc-password" value="DoctorPass@2026"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <input type="text" class="form-control" id="new-doc-phone" placeholder="+91 98401 XXXXX"/>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <select class="form-control" id="new-doc-dept"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Clinical Specialization</label>
+            <input type="text" class="form-control" id="new-doc-spec" placeholder="e.g. Interventional Cardiology"/>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">License Number</label>
+            <input type="text" class="form-control" id="new-doc-license" placeholder="MD-SPEC-XXXXX"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Experience (Years)</label>
+            <input type="number" class="form-control" id="new-doc-exp" value="8"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Consultation Fee (₹)</label>
+            <input type="number" class="form-control" id="new-doc-fee" value="95"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hospital Room / Clinic Suite</label>
+          <input type="text" class="form-control" id="new-doc-room" placeholder="Clinic Suite 204"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" onclick="AdminModule.submitNewDoctor()">Complete Onboarding</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. Add Department Modal (Admin) -->
+  <div class="modal-overlay" id="add-department-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Establish Clinical Department</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Department Name</label>
+          <input type="text" class="form-control" id="new-dept-name" placeholder="e.g. Dermatology & Cutaneous Surgery"/>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Department Code</label>
+            <input type="text" class="form-control" id="new-dept-code" placeholder="DERM"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Extension</label>
+            <input type="text" class="form-control" id="new-dept-ext" placeholder="214"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Floor Location</label>
+          <input type="text" class="form-control" id="new-dept-location" placeholder="Floor 2 - East Wing"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Clinical Description</label>
+          <textarea class="form-control" id="new-dept-desc" placeholder="Scope of clinical services..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" onclick="AdminModule.submitNewDepartment()">Save Department</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. Broadcast Announcement Modal (Admin) -->
+  <div class="modal-overlay" id="announcement-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Broadcast Hospital Announcement</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Announcement Title</label>
+          <input type="text" class="form-control" id="ann-title-input" placeholder="e.g. Scheduled Maintenance / Clinic Protocol Update"/>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Priority Level</label>
+            <select class="form-control" id="ann-priority-select">
+              <option value="info">Informational</option>
+              <option value="warning">Important Warning</option>
+              <option value="critical">Critical / Urgent Alert</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Audience</label>
+            <select class="form-control" id="ann-role-select">
+              <option value="all">All Hospital Users</option>
+              <option value="patient">Patients Only</option>
+              <option value="doctor">Physicians Only</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notification Message</label>
+          <textarea class="form-control" id="ann-msg-input" placeholder="Enter broadcast text..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" onclick="AdminModule.submitAnnouncement()">Dispatch Announcement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. Join Standby Waitlist Modal (Patient) -->
+  <div class="modal-overlay" id="join-waitlist-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Join Priority Standby Waitlist</h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Real-time slot re-allocation upon cancellations</span>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Department / Specialty</label>
+            <select class="form-control" id="waitlist-dept-select" onchange="PatientModule.updateWaitlistDoctorSelect()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Doctor (Optional)</label>
+            <select class="form-control" id="waitlist-doc-select"></select>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Urgency Priority</label>
+            <select class="form-control" id="waitlist-priority-select">
+              <option value="routine">Routine Clinical Standby</option>
+              <option value="priority">Priority Standby</option>
+              <option value="urgent">Urgent Standby (Accelerated Priority)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Desired Date</label>
+            <input type="date" class="form-control" id="waitlist-date-input"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time Flexibility Window</label>
+            <select class="form-control" id="waitlist-timewindow-select">
+              <option value="any">Any Time (Highest Probability)</option>
+              <option value="morning">Morning Only (08:30 - 12:30)</option>
+              <option value="afternoon">Afternoon Only (13:30 - 17:00)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Clinical Reason & Symptoms for Standby Request</label>
+          <textarea class="form-control" id="waitlist-reason-input" placeholder="e.g. Urgent evaluation required if any cancellations occur today or tomorrow..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" onclick="PatientModule.submitJoinWaitlist()">Confirm Standby Registration</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- Hospital Details Modal -->
+  <div class="modal-overlay" id="hospital-details-modal">
+    <div class="modal-card" style="max-width:680px; max-height:90vh; display:flex; flex-direction:column;">
+      <div class="modal-header">
+        <h3 class="modal-title">Hospital Facility & Clinical Roster</h3>
+        <button class="modal-close-btn" onclick="document.getElementById('hospital-details-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto; padding:20px;">
+        <div style="position:relative; width:100%; height:180px; border-radius:var(--radius-md); overflow:hidden; margin-bottom:14px;">
+          <img id="hosp-modal-img" src="" style="width:100%; height:100%; object-fit:cover;" alt="Hospital"/>
+          <span style="position:absolute; bottom:10px; right:10px; background:rgba(15,23,42,0.85); color:#38bdf8; padding:4px 10px; border-radius:var(--radius-full); font-size:0.75rem; font-weight:700;">★ 4.9 NABH Accredited</span>
+        </div>
+        <h3 id="hosp-modal-name" style="font-size:1.25rem; font-weight:800; margin-bottom:4px;"></h3>
+        <p id="hosp-modal-meta" style="font-size:0.84rem; color:var(--color-brand-primary); font-weight:600; margin-bottom:8px;"></p>
+        <p id="hosp-modal-address" style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px;"></p>
+        
+        <div style="margin-bottom:14px;">
+          <h4 style="font-size:0.82rem; font-weight:700; margin-bottom:6px; text-transform:uppercase; color:var(--text-muted);">Accredited Departments</h4>
+          <div id="hosp-modal-depts" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        </div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 style="font-size:0.82rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Practicing Physicians & Consultants</h4>
+            <span id="hosp-modal-fee" style="font-size:0.82rem; font-weight:700; color:var(--color-brand-teal);"></span>
+          </div>
+          <div id="hosp-modal-doctors-list"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn" onclick="document.getElementById('hospital-details-modal').classList.remove('active')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. Edit User Profile Modal -->
+  <div class="modal-overlay" id="edit-profile-modal">
+    <div class="modal-card" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Clinical Profile</h3>
+        <button class="modal-close-btn" onclick="document.getElementById('edit-profile-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="edit-prof-name" />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Phone (+91)</label>
+            <input type="tel" class="form-control" id="edit-prof-phone" maxlength="10" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <select class="form-control" id="edit-prof-city">
+              <option value="Chennai">Chennai</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Bengaluru">Bengaluru</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Vijayawada">Vijayawada</option>
+              <option value="Pune">Pune</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Kochi">Kochi</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Preferred Language</label>
+            <select class="form-control" id="edit-prof-lang">
+              <option value="English">English</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Tamil">Tamil</option>
+              <option value="Telugu">Telugu</option>
+              <option value="Kannada">Kannada</option>
+              <option value="Malayalam">Malayalam</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Avatar Image URL</label>
+            <input type="text" class="form-control" id="edit-prof-avatar" placeholder="https://..." />
+          </div>
+        </div>
+        <div id="edit-prof-pat-fields">
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div class="form-group">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" class="form-control" id="edit-prof-dob" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Gender</label>
+              <select class="form-control" id="edit-prof-gender">
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Blood Group</label>
+              <select class="form-control" id="edit-prof-blood">
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Residential Address</label>
+            <input type="text" class="form-control" id="edit-prof-address" placeholder="Flat No, Street, Locality" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emergency Contact Phone</label>
+            <input type="tel" class="form-control" id="edit-prof-emergency" placeholder="+91 98401 99999" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Known Allergies (Comma separated)</label>
+            <input type="text" class="form-control" id="edit-prof-allergies" placeholder="e.g. Penicillin, Sulfa drugs" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Existing Chronic Conditions (Comma separated)</label>
+            <input type="text" class="form-control" id="edit-prof-chronic" placeholder="e.g. Hypertension, Type 2 Diabetes" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-cancel-btn" onclick="document.getElementById('edit-profile-modal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-teal" onclick="saveUserProfile()">Save Profile Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application Scripts -->
+  <script src="/js/api.js"></script>
+  <script src="/js/state.js"></script>
+  <script src="/js/patient.js"></script>
+  <script src="/js/doctor.js"></script>
+  <script src="/js/admin.js"></script>
+  <script src="/js/chatbot.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

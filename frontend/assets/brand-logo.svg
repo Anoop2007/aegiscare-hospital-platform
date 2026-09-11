@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="aegisGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0d9488" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <rect width="48" height="48" rx="12" fill="url(#aegisGrad)" filter="url(#shadow)"/>
+  <!-- Stylized Caduceus / Clinical Pulse Shield -->
+  <path d="M24 8 L36 13 V24 C36 32 24 39 24 39 C24 39 12 32 12 24 V13 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Pulse waveform inside shield -->
+  <path d="M17 24 H21 L23 18 L25 30 L27 21 L29 24 H31" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
