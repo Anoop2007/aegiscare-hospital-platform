@@ -640,4 +640,5 @@ Signed: Dr. Gregory Ross, MD, Diagnostic Neuroradiology."""
            VALUES (?, 'SYSTEM_INIT', 'PLATFORM', 'SYSTEM', '{"event": "Clinical OS initialized with verified schemas"}', ?)""",
         (admin_uid, now_iso)
     )
+    seed_enhancements_if_needed()
     print("AegisCare Clinical Platform database seeded successfully!")

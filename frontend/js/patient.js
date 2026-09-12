@@ -438,6 +438,15 @@ const PatientModule = {
       let hospitals = await api.get('/patient/hospitals', params, { signal });
       if (hospitals && hospitals.__aborted) return;
 
+      if (hospitals && !Array.isArray(hospitals) && Array.isArray(hospitals.hospitals)) {
+        hospitals = hospitals.hospitals;
+      }
+      if ((!hospitals || hospitals.length === 0) && (!params.city || params.city === 'all') && !params.query_str && !params.emergency_only) {
+        if (typeof MockStore !== 'undefined' && Array.isArray(MockStore.hospitals) && MockStore.hospitals.length > 0) {
+          hospitals = MockStore.hospitals;
+        }
+      }
+
       if (this.userLocation && hospitals && hospitals.length > 0) {
         hospitals.forEach(h => {
           h._distanceKm = this.calculateDistanceKm(

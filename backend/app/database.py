@@ -317,6 +317,7 @@ def init_db():
         starting_fee REAL DEFAULT 500.0,
         opening_hours TEXT DEFAULT '24x7 Emergency • OPD 08:00 - 20:00',
         departments_json TEXT,
+        image_url TEXT,
         created_at TEXT NOT NULL
     );
 

@@ -530,7 +530,7 @@ const api = {
       ];
     }
 
-    if (cleanUrl === '/admin/hospitals') {
+    if (cleanUrl === '/patient/hospitals' || cleanUrl === '/admin/hospitals') {
       return MockStore.hospitals;
     }
 

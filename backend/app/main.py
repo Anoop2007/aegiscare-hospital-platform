@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from .config import FRONTEND_DIR, APP_NAME, APP_VERSION, API_PREFIX
 from .database import init_db, query_all
-from .seed_data import seed_database
+from .seed_data import seed_database, seed_enhancements_if_needed
 
 # Import routers
 from .routers.auth_router import router as auth_router
@@ -23,6 +23,10 @@ async def lifespan(app: FastAPI):
     # Startup: Initialize tables and seed realistic healthcare data
     init_db()
     seed_database()
+    try:
+        seed_enhancements_if_needed()
+    except Exception as e:
+        print(f"Error seeding enhancements: {e}")
     yield
     # Shutdown
 
