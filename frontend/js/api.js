@@ -17,11 +17,20 @@ const API_BASE = (() => {
     return (window.API_BASE_URL || window.AEGIS_API_URL || window.VITE_API_URL).replace(/\/+$/, '');
   }
 
-  // If running on a standalone dev port like 3000/5173, point to backend on 8000
-  if (typeof window !== 'undefined' && window.location && window.location.port && !['8000', '', '80', '443'].includes(window.location.port)) {
-    return `${window.location.protocol}//${window.location.hostname}:8000/api`;
+  // If running locally in development, point to local backend
+  if (typeof window !== 'undefined' && window.location) {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      if (port && !['8000', '', '80', '443'].includes(port)) {
+        return `${window.location.protocol}//${hostname}:8000/api`;
+      }
+      return '/api';
+    }
   }
-  return '/api';
+
+  // Production Render Live Backend API URL
+  return 'https://aegiscare-hospital-platform-1.onrender.com/api';
 })();
 
 /* ================= COMPREHENSIVE CLINICAL FALLBACK STORE ================= */
