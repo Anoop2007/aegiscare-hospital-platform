@@ -36,23 +36,35 @@ const PatientModule = {
     }
 
     const docId = doc.id || 1;
-    let shifts = [];
-    if (docId % 3 === 0) {
-      shifts = [
-        { start: 9.0, end: 13.0, label: '09:00 AM – 01:00 PM' },
-        { start: 14.0, end: 17.5, label: '02:00 PM – 05:30 PM' }
-      ];
-    } else if (docId % 3 === 1) {
-      shifts = [
-        { start: 10.0, end: 14.0, label: '10:00 AM – 02:00 PM' },
-        { start: 16.0, end: 20.5, label: '04:00 PM – 08:30 PM' }
-      ];
-    } else {
-      shifts = [
+    // 6 distinct realistic clinical shift variations across doctors
+    const scheduleVariations = [
+      [
         { start: 8.5, end: 13.0, label: '08:30 AM – 01:00 PM' },
-        { start: 14.5, end: 18.0, label: '02:30 PM – 06:00 PM' }
-      ];
-    }
+        { start: 14.0, end: 17.5, label: '02:00 PM – 05:30 PM' }
+      ],
+      [
+        { start: 10.0, end: 14.0, label: '10:00 AM – 02:00 PM' },
+        { start: 17.5, end: 21.5, label: '05:30 PM – 09:30 PM' }
+      ],
+      [
+        { start: 12.0, end: 16.0, label: '12:00 PM – 04:00 PM' },
+        { start: 18.0, end: 22.0, label: '06:00 PM – 10:00 PM' }
+      ],
+      [
+        { start: 7.5, end: 12.0, label: '07:30 AM – 12:00 PM' },
+        { start: 16.5, end: 20.5, label: '04:30 PM – 08:30 PM' }
+      ],
+      [
+        { start: 9.0, end: 14.5, label: '09:00 AM – 02:30 PM' },
+        { start: 15.5, end: 19.5, label: '03:30 PM – 07:30 PM' }
+      ],
+      [
+        { start: 11.0, end: 15.0, label: '11:00 AM – 03:00 PM' },
+        { start: 17.0, end: 21.0, label: '05:00 PM – 09:00 PM' }
+      ]
+    ];
+
+    const shifts = scheduleVariations[docId % scheduleVariations.length];
 
     for (const s of shifts) {
       if (currentVal >= s.start && currentVal < s.end) {
@@ -69,7 +81,7 @@ const PatientModule = {
       if (currentVal < s.start) {
         const startH = Math.floor(s.start);
         const startM = Math.round((s.start - startH) * 60);
-        const timeStr = `${startH > 12 ? startH - 12 : startH}:${startM === 0 ? '00' : startM} ${startH >= 12 ? 'PM' : 'AM'}`;
+        const timeStr = `${startH > 12 ? startH - 12 : startH}:${startM === 0 ? '00' : (startM < 10 ? '0' + startM : startM)} ${startH >= 12 ? 'PM' : 'AM'}`;
         return {
           isAvailableNow: false,
           badgeText: `Next Slot: ${timeStr} (${s.label})`,
@@ -82,7 +94,7 @@ const PatientModule = {
     const tomorrowSlot = shifts[0].label.split('–')[0].trim();
     return {
       isAvailableNow: false,
-      badgeText: `Shift Ended (Resumes ${tomorrowSlot} Tomorrow)`,
+      badgeText: `Resumes ${tomorrowSlot} Tomorrow (${shifts[0].label})`,
       shiftText: shifts[0].label,
       badgeClass: 'badge-live-ended'
     };
@@ -374,6 +386,10 @@ const PatientModule = {
 
     grid.innerHTML = doctors.map(doc => {
       const timing = this.getDoctorLiveTiming(doc);
+      const dist = (doc._distanceKm !== undefined && doc._distanceKm !== null)
+        ? doc._distanceKm
+        : (0.8 + ((doc.id * 13 + 7) % 48) / 10).toFixed(1);
+
       return `
       <div class="doctor-card">
         <div>
@@ -394,7 +410,7 @@ const PatientModule = {
             <span class="doc-chip live-timing-badge ${timing.badgeClass}">
               🕒 ${timing.badgeText}
             </span>
-            ${doc._distanceKm !== undefined && doc._distanceKm !== null ? `<span class="doc-chip distance-badge">📍 ${doc._distanceKm} km away</span>` : ''}
+            <span class="doc-chip distance-badge" style="background:#fef3c7; color:#92400e; font-weight:600;">📍 ${dist} km away</span>
           </div>
           <div style="font-size:0.78rem; color:var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
             ${escapeHtml(doc.bio || 'Specialized clinical practitioner offering evidence-based medical consultations.')}

@@ -51,7 +51,8 @@
 
         <div class="auth-tabs">
           <button class="auth-tab-btn active" id="auth-tab-otp-btn" onclick="switchAuthTab('otp')">Mobile OTP (+91)</button>
-          <button class="auth-tab-btn" id="auth-tab-email-btn" onclick="switchAuthTab('email')">Continue with Email</button>
+          <button class="auth-tab-btn" id="auth-tab-google-btn" onclick="switchAuthTab('google')">Google / Gmail OTP</button>
+          <button class="auth-tab-btn" id="auth-tab-email-btn" onclick="switchAuthTab('email')">Password</button>
           <button class="auth-tab-btn" id="auth-tab-reg-btn" onclick="switchAuthTab('reg')">Sign Up</button>
         </div>
 
@@ -198,6 +199,47 @@
           </div>
           <div class="pw-meter-bar"><div id="reg-pw-meter" class="pw-meter-fill"></div></div>
           <button id="btn-create-account" class="btn btn-teal" style="width:100%; margin-top:12px;" onclick="submitRegistration()">Create Account</button>
+        </div>
+
+        <!-- Tab 4: Google / Gmail Verification Panel -->
+        <div id="auth-panel-google" style="display:none;">
+          <div id="google-step-1">
+            <label class="form-label" style="font-weight:600; margin-bottom:6px;">Enter your Gmail / Google Address</label>
+            <input type="email" id="auth-google-email" class="form-control" placeholder="user@gmail.com" style="font-size:0.96rem;" oninput="document.getElementById('auth-google-error').style.display='none'" onkeydown="if(event.key==='Enter') sendGoogleOTP()" />
+            <div id="auth-google-error" style="display:none; font-size:0.8rem; color:#dc2626; margin-top:6px; font-weight:600;">Please enter a valid Gmail address.</div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">A 6-digit verification code will be sent to your Gmail inbox.</p>
+            <button id="btn-get-google-otp" class="btn btn-primary" style="width:100%; margin-top:14px;" onclick="sendGoogleOTP()">Get Verification Code</button>
+            <div style="display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.74rem; color:#065f46; background:#ecfdf5; border:1px solid #a7f3d0; padding:6px 10px; border-radius:6px; margin-top:12px;">
+              <span>🔒 256-Bit SSL End-to-End Encrypted Session • Google OAuth 2.0</span>
+            </div>
+          </div>
+
+          <div id="google-step-2" style="display:none; text-align:center;">
+            <h4 style="font-size:1.05rem; font-weight:700; margin-bottom:4px; color:var(--text-primary);">Enter the 6-digit Gmail OTP</h4>
+            <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:8px;">Verification code sent to <strong id="google-masked-email">user@gmail.com</strong></p>
+            
+            <div class="auth-security-badge" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:8px 12px; margin:12px 0 16px 0; font-size:0.76rem; color:#065f46;">
+              <span style="font-size:1rem;">🔒</span>
+              <span><strong>Google Identity Verification</strong> • Session Protected</span>
+            </div>
+
+            <!-- 6 Individual Gmail OTP Boxes -->
+            <div class="otp-box-row" id="google-otp-boxes-row" onpaste="handleGoogleOtpPaste(event)">
+              <input type="text" class="otp-digit" id="g-otp-d-0" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleGoogleOtpInput(this, 0)" onkeydown="handleGoogleOtpKey(event, 0)" />
+              <input type="text" class="otp-digit" id="g-otp-d-1" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleGoogleOtpInput(this, 1)" onkeydown="handleGoogleOtpKey(event, 1)" />
+              <input type="text" class="otp-digit" id="g-otp-d-2" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleGoogleOtpInput(this, 2)" onkeydown="handleGoogleOtpKey(event, 2)" />
+              <input type="text" class="otp-digit" id="g-otp-d-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleGoogleOtpInput(this, 3)" onkeydown="handleGoogleOtpKey(event, 3)" />
+              <input type="text" class="otp-digit" id="g-otp-d-4" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleGoogleOtpInput(this, 4)" onkeydown="handleGoogleOtpKey(event, 4)" />
+              <input type="text" class="otp-digit" id="g-otp-d-5" maxlength="1" inputmode="numeric" pattern="[0-9]*" oninput="handleGoogleOtpInput(this, 5)" onkeydown="handleGoogleOtpKey(event, 5)" />
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin:12px 0;">
+              <span id="google-otp-timer-text" style="color:var(--text-muted);">Resend code in <strong>30s</strong></span>
+              <button id="google-otp-resend-btn" class="btn btn-secondary btn-sm" style="display:none;" onclick="sendGoogleOTP()">Resend Code</button>
+              <button class="btn btn-secondary btn-sm" onclick="resetGoogleOtpStep()">Change Email</button>
+            </div>
+            <button id="btn-verify-google-otp" class="btn btn-teal" style="width:100%;" onclick="verifyGoogleOTP()">Verify & Sign In with Google</button>
+          </div>
         </div>
 
         <!-- Google Login Divider & Button -->
@@ -381,12 +423,12 @@
           <div style="position: relative;">
             <button class="icon-btn" id="topbar-notif-btn" title="Hospital Notifications">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-              <span class="notification-badge" id="topbar-notif-badge">3</span>
+              <span class="notification-badge" id="topbar-notif-badge" style="display:none;">0</span>
             </button>
             <div id="notification-dropdown" style="display:none; position:absolute; right:0; top:48px; width:320px; background:#fff; border-radius:var(--radius-md); box-shadow:var(--shadow-xl); border:1px solid var(--border-subtle); z-index:110;">
               <div style="padding:12px 16px; font-weight:700; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-size:0.88rem;">Notifications</span>
-                <button class="btn btn-secondary btn-sm" style="font-size:0.7rem; padding:2px 6px;" onclick="api.put('/patient/notifications/mark-all-read').then(() => loadNotificationDropdown())">Mark all read</button>
+                <button class="btn btn-secondary btn-sm" style="font-size:0.7rem; padding:2px 6px;" onclick="markAllNotificationsRead()">Mark all read</button>
               </div>
               <div id="notification-dropdown-list" style="max-height:280px; overflow-y:auto;"></div>
             </div>

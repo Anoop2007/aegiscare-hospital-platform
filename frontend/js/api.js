@@ -52,10 +52,10 @@ const MockStore = {
     { id: 6, name: "Internal Medicine", code: "IM", floor: "Ground Floor - Outpatient Pavilion", doctor_count: 7, extension: "105" }
   ],
   hospitals: [
-    { id: 1, name: "Apollo Speciality Hospital Greams Road", city: "Chennai", state: "Tamil Nadu", address: "21 Greams Lane, Thousand Lights, Chennai, Tamil Nadu 600006", accreditation: "NABH / JCI Accredited", total_doctors: 24, departments: ["Cardiology", "Neurology", "Orthopedics", "Oncology"], consultation_fee: "₹800 - ₹1,500", rating: 4.9, image_url: "https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?w=600" },
-    { id: 2, name: "Manipal Hospital Old Airport Road", city: "Bengaluru", state: "Karnataka", address: "98 HAL Old Airport Rd, Kodihalli, Bengaluru, Karnataka 560017", accreditation: "NABH Accredited", total_doctors: 28, departments: ["Orthopedics", "Cardiology", "Pediatrics", "Oncology"], consultation_fee: "₹750 - ₹1,400", rating: 4.8, image_url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600" },
-    { id: 3, name: "KIMS Hospital Secunderabad", city: "Hyderabad", state: "Telangana", address: "1-8-31/1, Minister Rd, Krishna Nagar, Secunderabad 500003", accreditation: "NABH / NABL Accredited", total_doctors: 22, departments: ["Pediatrics", "Cardiology", "Neurology"], consultation_fee: "₹650 - ₹1,200", rating: 4.8, image_url: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600" },
-    { id: 4, name: "Tata Memorial Hospital Parel", city: "Mumbai", state: "Maharashtra", address: "Dr. E Borges Road, Parel, Mumbai, Maharashtra 400012", accreditation: "NABH Accredited Apex Oncology Center", total_doctors: 35, departments: ["Oncology", "Hematology", "Palliative Care"], consultation_fee: "₹700 - ₹1,800", rating: 4.9, image_url: "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=600" }
+    { id: 1, code: "HOSP-CHE-101", name: "Apollo Speciality Hospital Greams Road", city: "Chennai", locality: "Thousand Lights", state: "Tamil Nadu", address: "21 Greams Lane, Thousand Lights, Chennai, Tamil Nadu 600006", accreditation: "NABH / JCI Accredited", total_doctors: 24, bed_capacity: 550, icu_beds: 65, consultation_base_fee: 750, emergency_24x7: true, departments: ["Cardiology", "Neurology", "Orthopedics", "Oncology"], consultation_fee: "₹750 - ₹1,500", rating: 4.9, image_url: "https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?w=600" },
+    { id: 2, code: "HOSP-BLR-102", name: "Manipal Hospital Old Airport Road", city: "Bengaluru", locality: "Kodihalli", state: "Karnataka", address: "98 HAL Old Airport Rd, Kodihalli, Bengaluru, Karnataka 560017", accreditation: "NABH Accredited", total_doctors: 28, bed_capacity: 650, icu_beds: 80, consultation_base_fee: 850, emergency_24x7: true, departments: ["Orthopedics", "Cardiology", "Pediatrics", "Oncology"], consultation_fee: "₹850 - ₹1,400", rating: 4.8, image_url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600" },
+    { id: 3, code: "HOSP-HYD-103", name: "KIMS Hospital Secunderabad", city: "Hyderabad", locality: "Krishna Nagar", state: "Telangana", address: "1-8-31/1, Minister Rd, Krishna Nagar, Secunderabad 500003", accreditation: "NABH / NABL Accredited", total_doctors: 22, bed_capacity: 480, icu_beds: 45, consultation_base_fee: 600, emergency_24x7: true, departments: ["Pediatrics", "Cardiology", "Neurology"], consultation_fee: "₹600 - ₹1,200", rating: 4.8, image_url: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600" },
+    { id: 4, code: "HOSP-BOM-104", name: "Tata Memorial Hospital Parel", city: "Mumbai", locality: "Parel", state: "Maharashtra", address: "Dr. E Borges Road, Parel, Mumbai, Maharashtra 400012", accreditation: "NABH Accredited Apex Oncology Center", total_doctors: 35, bed_capacity: 820, icu_beds: 95, consultation_base_fee: 900, emergency_24x7: true, departments: ["Oncology", "Hematology", "Palliative Care"], consultation_fee: "₹900 - ₹1,800", rating: 4.9, image_url: "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=600" }
   ],
   appointments: [
     { id: 101, appointment_ref: "CA-APT-8941", doctor_name: "Dr. Priya Sharma, MD", department_name: "Cardiology & Vascular", scheduled_date: new Date().toISOString().split('T')[0], scheduled_time: "10:30 AM", consultation_mode: "In-Person", status: "confirmed", reason: "Quarterly hypertension evaluation and ECG review", doctor_id: 1, room_number: "Suite 204" },
@@ -206,11 +206,13 @@ const api = {
       return { success: true, message: "Verification OTP sent successfully via secure SMS gateway" };
     }
 
-    if (cleanUrl === '/auth/verify-otp' || cleanUrl === '/auth/login' || cleanUrl === '/auth/register') {
+    if (cleanUrl === '/auth/verify-otp' || cleanUrl === '/auth/login' || cleanUrl === '/auth/register' || cleanUrl === '/auth/google-login') {
+      const body = typeof options.body === 'string' ? JSON.parse(options.body || '{}') : (options.body || {});
+      const email = body.email || "patient.jane@aegiscare.health";
       const u = {
         id: 1,
-        full_name: "Arjun Sharma",
-        email: "arjun.sharma@careaura.health",
+        full_name: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        email: email,
         role: "patient",
         mrn: "CA-MRN-48912",
         phone: "+91 98401 55210",
