@@ -56,3 +56,5 @@ Thumbs.db
 
 # Logs & temporary run files
 *.log
+
+push_to_github.bat
