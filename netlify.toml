@@ -1,11 +1,12 @@
 [build]
-  command = ""
+  command = "echo 'Static frontend build complete'"
   publish = "frontend"
 
 [[redirects]]
   from = "/api/*"
   to = "https://aegiscare-hospital-platform-1.onrender.com/api/:splat"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/*"
