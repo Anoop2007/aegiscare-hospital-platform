@@ -660,6 +660,14 @@ const AdminModule = {
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">Loading hospital directory...</td></tr>';
     try {
+      const res = await api.get('/admin/hospitals');
+      let hospitals = Array.isArray(res) ? res : (res && Array.isArray(res.hospitals) ? res.hospitals : []);
+
+      if (!hospitals || hospitals.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">No hospital facilities found in directory.</td></tr>';
+        return;
+      }
+
       const defaultFees = [650, 750, 550, 850, 600, 900, 700, 800, 520, 950];
       const defaultBeds = [450, 600, 350, 750, 300, 800, 520, 480, 320, 620];
       const defaultIcu = [45, 70, 30, 85, 25, 90, 55, 40, 28, 65];
