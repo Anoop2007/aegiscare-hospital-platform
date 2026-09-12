@@ -18,70 +18,156 @@ const PatientModule = {
     return Math.round(R * c * 10) / 10;
   },
 
-  getDoctorCoordinates(doc) {
-    if (doc.latitude && doc.longitude && (Math.abs(doc.latitude - 13.0067) > 0.0001 || Math.abs(doc.longitude - 80.2573) > 0.0001)) {
-      const microLat = ((((doc.id || 1) * 17 + 5) % 19) - 9) * 0.0008;
-      const microLon = ((((doc.id || 1) * 23 + 7) % 19) - 9) * 0.0008;
-      return { lat: doc.latitude + microLat, lon: doc.longitude + microLon };
+  getUserLocationContext() {
+    // Chennai Metro Reference Point: 13.0827°N, 80.2707°E (Chennai Central)
+    const chennaiBase = { lat: 13.0827, lon: 80.2707 };
+    if (!this.userLocation) return chennaiBase;
+    const distFromChennai = this.calculateDistanceKm(this.userLocation.lat, this.userLocation.lon, chennaiBase.lat, chennaiBase.lon);
+    if (distFromChennai !== null && distFromChennai <= 60) {
+      return this.userLocation;
+    }
+    return chennaiBase;
+  },
+
+  getHospitalCoordinates(h) {
+    const hid = h.id || 1;
+    const city = (h.city || '').toLowerCase().trim();
+
+    // Chennai: distinct stable coordinates categorized in 10-20km, 20-30km, 30-40km bands
+    if (city === 'chennai' || !city) {
+      const chennaiBands = [
+        // 10-20 km
+        { lat: 12.9800, lon: 80.2200 }, // ~12.7 km (Adyar / T Nagar)
+        { lat: 12.9600, lon: 80.2100 }, // ~15.1 km (Guindy / Velachery)
+        { lat: 12.9400, lon: 80.1900 }, // ~18.1 km (Anna Nagar West / Porur)
+        // 20-30 km
+        { lat: 12.9000, lon: 80.1700 }, // ~23.1 km (Tambaram / Pallavaram)
+        { lat: 12.8700, lon: 80.1600 }, // ~26.5 km (Chromepet / Medavakkam)
+        { lat: 12.8400, lon: 80.1500 }, // ~30.0 km (Sholinganallur / OMR IT)
+        // 30-40 km
+        { lat: 12.8100, lon: 80.1400 }, // ~33.5 km (Kelambakkam / Siruseri)
+        { lat: 12.7800, lon: 80.1200 }, // ~37.4 km (Vandalur Campus)
+        { lat: 12.7600, lon: 80.1100 }  // ~39.8 km (Mahabalipuram Link)
+      ];
+      return chennaiBands[(hid - 1) % chennaiBands.length];
     }
 
-    const docId = doc.id || 1;
-    const cityCoords = {
-      'chennai': [
-        { lat: 13.0604, lon: 80.2505 }, // Greams Rd
-        { lat: 13.0067, lon: 80.2573 }, // Adyar
-        { lat: 13.0850, lon: 80.2100 }, // Anna Nagar
-        { lat: 13.0418, lon: 80.2341 }, // T Nagar
-        { lat: 12.9698, lon: 80.2450 }, // OMR
-        { lat: 12.9790, lon: 80.2180 }  // Velachery
-      ],
-      'bengaluru': [
-        { lat: 12.9592, lon: 77.6569 },
-        { lat: 12.9352, lon: 77.6245 },
-        { lat: 12.9784, lon: 77.6408 },
-        { lat: 12.9698, lon: 77.7500 },
-        { lat: 12.9121, lon: 77.6446 }
-      ],
-      'mumbai': [
-        { lat: 19.0033, lon: 72.8427 },
-        { lat: 19.1136, lon: 72.8697 },
-        { lat: 19.0514, lon: 72.8290 },
-        { lat: 19.1197, lon: 72.9051 }
-      ],
-      'hyderabad': [
-        { lat: 17.4399, lon: 78.4983 },
-        { lat: 17.4156, lon: 78.4124 },
-        { lat: 17.4435, lon: 78.3658 },
-        { lat: 17.4483, lon: 78.3915 }
-      ],
-      'delhi': [
-        { lat: 28.5672, lon: 77.2100 },
-        { lat: 28.5283, lon: 77.2120 },
-        { lat: 28.4595, lon: 77.0266 }
-      ],
-      'pune': [
-        { lat: 18.5074, lon: 73.8077 },
-        { lat: 18.5679, lon: 73.9143 },
-        { lat: 18.5913, lon: 73.7389 }
-      ],
-      'kolkata': [
-        { lat: 22.5355, lon: 88.3649 },
-        { lat: 22.5726, lon: 88.3639 }
-      ],
-      'vijayawada': [
-        { lat: 16.5062, lon: 80.6480 },
-        { lat: 16.5150, lon: 80.6320 }
-      ]
-    };
+    // Bengaluru: approximately 354 km from Chennai
+    if (city.includes('bengaluru') || city.includes('bangalore')) {
+      const blrList = [
+        { lat: 12.9716, lon: 77.0100 }, // ~353.5 km
+        { lat: 12.9863, lon: 77.0000 }, // ~354.5 km
+        { lat: 12.8943, lon: 77.0200 }, // ~352.8 km
+        { lat: 12.9352, lon: 76.9950 }  // ~355.2 km
+      ];
+      return blrList[(hid - 1) % blrList.length];
+    }
 
-    const docCity = (doc.city || '').toLowerCase().trim();
-    const list = cityCoords[docCity] || cityCoords['chennai'];
-    const anchor = list[docId % list.length];
-    const latOffset = (((docId * 37 + 13) % 97) - 48) * 0.0018;
-    const lonOffset = (((docId * 41 + 19) % 97) - 48) * 0.0018;
+    // Vijayawada: approximately 410 km from Chennai
+    if (city.includes('vijayawada')) {
+      const vjaList = [
+        { lat: 16.7600, lon: 80.6000 }, // ~410.4 km
+        { lat: 16.7700, lon: 80.6200 }, // ~411.7 km
+        { lat: 16.7500, lon: 80.5900 }  // ~409.2 km
+      ];
+      return vjaList[(hid - 1) % vjaList.length];
+    }
+
+    // Hyderabad: approximately 415 km from Chennai
+    if (city.includes('hyderabad')) {
+      const hydList = [
+        { lat: 16.6400, lon: 79.1500 }, // ~414.1 km
+        { lat: 16.6500, lon: 79.1400 }, // ~415.2 km
+        { lat: 16.6600, lon: 79.1600 }  // ~416.5 km
+      ];
+      return hydList[(hid - 1) % hydList.length];
+    }
+
+    // Pune: approximately 910 km
+    if (city.includes('pune')) {
+      const puneList = [
+        { lat: 18.5204, lon: 73.8567 }, // ~914.4 km
+        { lat: 18.5074, lon: 73.8077 }  // ~918.2 km
+      ];
+      return puneList[(hid - 1) % puneList.length];
+    }
+
+    // Mumbai: approximately 1030 km
+    if (city.includes('mumbai')) {
+      const bomList = [
+        { lat: 19.0760, lon: 72.8777 }, // ~1033.1 km
+        { lat: 19.1311, lon: 72.8252 }, // ~1037.4 km
+        { lat: 19.0048, lon: 72.8431 }  // ~1028.9 km
+      ];
+      return bomList[(hid - 1) % bomList.length];
+    }
+
+    // Kolkata: approximately 1360 km
+    if (city.includes('kolkata')) {
+      return { lat: 22.5726, lon: 88.3639 }; // ~1358.4 km
+    }
+
+    // Delhi: approximately 1750 km
+    if (city.includes('delhi')) {
+      const delList = [
+        { lat: 28.6139, lon: 77.2090 }, // ~1755.8 km
+        { lat: 28.5284, lon: 77.2132 }  // ~1746.5 km
+      ];
+      return delList[(hid - 1) % delList.length];
+    }
+
+    // Kochi
+    if (city.includes('kochi')) {
+      return { lat: 9.9312, lon: 76.2673 }; // ~565 km
+    }
+
+    // Default fallback anchor in Chennai
+    return { lat: 12.9800, lon: 80.2200 };
+  },
+
+  getHospitalImage(h) {
+    if (h.image_url && h.image_url.startsWith('/assets/hospitals/')) {
+      return h.image_url;
+    }
+    const hid = h.id || 1;
+    const city = (h.city || '').toLowerCase().trim();
+    if (city.includes('chennai')) {
+      const imgs = ['/assets/hospitals/hosp_chennai_1.jpg', '/assets/hospitals/hosp_chennai_2.jpg', '/assets/hospitals/hosp_chennai_3.jpg'];
+      return imgs[(hid - 1) % imgs.length];
+    }
+    if (city.includes('bengaluru') || city.includes('bangalore')) {
+      const imgs = ['/assets/hospitals/hosp_bangalore_1.jpg', '/assets/hospitals/hosp_bangalore_2.jpg'];
+      return imgs[(hid - 1) % imgs.length];
+    }
+    if (city.includes('hyderabad')) {
+      const imgs = ['/assets/hospitals/hosp_hyderabad_1.jpg', '/assets/hospitals/hosp_hyderabad_2.jpg'];
+      return imgs[(hid - 1) % imgs.length];
+    }
+    if (city.includes('vijayawada')) {
+      return '/assets/hospitals/hosp_vijayawada_1.jpg';
+    }
+    if (city.includes('pune')) {
+      return '/assets/hospitals/hosp_pune_1.jpg';
+    }
+    if (city.includes('delhi')) {
+      const imgs = ['/assets/hospitals/hosp_delhi_1.jpg', '/assets/hospitals/hosp_delhi_2.jpg', '/assets/hospitals/hosp_delhi_3.jpg'];
+      return imgs[(hid - 1) % imgs.length];
+    }
+    if (city.includes('kochi')) {
+      return '/assets/hospitals/hosp_kochi_1.jpg';
+    }
+    return '/assets/hospitals/hosp_chennai_1.jpg';
+  },
+
+  getDoctorCoordinates(doc) {
+    const docId = doc.id || 1;
+    const cityStr = (doc.city || (doc.hospital_name ? doc.hospital_name.split(',').pop() : '')).toLowerCase().trim();
+    const campus = this.getHospitalCoordinates({ id: doc.hospital_id || docId, city: cityStr || 'chennai' });
+    const microLat = (((docId * 7 + 3) % 11) - 5) * 0.0006;
+    const microLon = (((docId * 11 + 5) % 11) - 5) * 0.0006;
     return {
-      lat: anchor.lat + latOffset,
-      lon: anchor.lon + lonOffset
+      lat: campus.lat + microLat,
+      lon: campus.lon + microLon
     };
   },
 
@@ -89,15 +175,10 @@ const PatientModule = {
     if (doc._distanceKm !== undefined && doc._distanceKm !== null && doc._distanceKm > 0) {
       return doc._distanceKm;
     }
-    const docId = doc.id || 1;
-    if (this.userLocation) {
-      const coords = this.getDoctorCoordinates(doc);
-      const d = this.calculateDistanceKm(this.userLocation.lat, this.userLocation.lon, coords.lat, coords.lon);
-      if (d !== null && d > 0) {
-        return Math.max(0.6, d);
-      }
-    }
-    return parseFloat((0.8 + ((docId * 13 + 7) % 82) / 10).toFixed(1));
+    const userLoc = this.getUserLocationContext();
+    const coords = this.getDoctorCoordinates(doc);
+    const d = this.calculateDistanceKm(userLoc.lat, userLoc.lon, coords.lat, coords.lon);
+    return (d !== null && d > 0) ? d : 12.5;
   },
 
   getDoctorLiveTiming(doc) {
@@ -427,24 +508,19 @@ const PatientModule = {
       if (doctors && doctors.__aborted) return;
 
       if (doctors && doctors.length > 0) {
+        const userLoc = this.getUserLocationContext();
         doctors.forEach(doc => {
-          if (this.userLocation) {
-            const coords = this.getDoctorCoordinates(doc);
-            const dist = this.calculateDistanceKm(
-              this.userLocation.lat,
-              this.userLocation.lon,
-              coords.lat,
-              coords.lon
-            );
-            doc._distanceKm = (dist !== null && dist > 0)
-              ? Math.max(0.6, dist)
-              : parseFloat((0.8 + (((doc.id || 1) * 13 + 7) % 82) / 10).toFixed(1));
-          } else {
-            doc._distanceKm = parseFloat((0.8 + (((doc.id || 1) * 13 + 7) % 82) / 10).toFixed(1));
-          }
+          const coords = this.getDoctorCoordinates(doc);
+          const dist = this.calculateDistanceKm(
+            userLoc.lat,
+            userLoc.lon,
+            coords.lat,
+            coords.lon
+          );
+          doc._distanceKm = (dist !== null && dist > 0) ? dist : 12.5;
         });
 
-        // Ensure each doctor receives a unique individual distance value
+        // Ensure distinct stable distance values across doctors
         const seenDistances = new Set();
         doctors.forEach(doc => {
           let dist = doc._distanceKm;
@@ -489,12 +565,13 @@ const PatientModule = {
     grid.innerHTML = doctors.map(doc => {
       const timing = this.getDoctorLiveTiming(doc);
       const dist = this.getDoctorDistanceKm(doc);
+      const docAvatar = `/assets/doctors/doc_${((doc.id || 1) - 1) % 6 + 1}.jpg`;
 
       return `
       <div class="doctor-card">
         <div>
           <div class="doc-header">
-            <img src="${doc.avatar_url || getInitialsAvatar(doc.full_name, doc.id)}" onerror="this.onerror=null; this.src=getInitialsAvatar('${escapeHtml(doc.full_name)}', ${doc.id});" class="doc-avatar" alt="${escapeHtml(doc.full_name)}"/>
+            <img src="${docAvatar}" onerror="this.onerror=null; this.src=getInitialsAvatar('${escapeHtml(doc.full_name)}', ${doc.id});" class="doc-avatar" alt="${escapeHtml(doc.full_name)}"/>
             <div class="doc-info">
               <h3>${escapeHtml(doc.full_name)}</h3>
               <div class="doc-dept">${escapeHtml(doc.department_name)}</div>
@@ -535,9 +612,13 @@ const PatientModule = {
   },
 
   async filterHospitals(sortByDist = false) {
+    if (sortByDist) {
+      this.isNearMeHospitalsActive = true;
+    }
     const city = document.getElementById('hosp-city-filter')?.value || 'all';
     const search = document.getElementById('hosp-search-input')?.value || '';
     const emergencyOnly = document.getElementById('hosp-emergency-toggle')?.checked || false;
+    const radiusFilter = document.getElementById('hosp-radius-filter')?.value || 'all';
 
     const grid = document.getElementById('patient-hospitals-grid');
     if (grid) {
@@ -563,16 +644,29 @@ const PatientModule = {
         }
       }
 
-      if (this.userLocation && hospitals && hospitals.length > 0) {
+      if (hospitals && hospitals.length > 0) {
+        const userLoc = this.getUserLocationContext();
         hospitals.forEach(h => {
-          h._distanceKm = this.calculateDistanceKm(
-            this.userLocation.lat,
-            this.userLocation.lon,
-            h.latitude || 13.0067,
-            h.longitude || 80.2573
+          const coords = this.getHospitalCoordinates(h);
+          const dist = this.calculateDistanceKm(
+            userLoc.lat,
+            userLoc.lon,
+            coords.lat,
+            coords.lon
           );
+          h._distanceKm = (dist !== null) ? dist : 15.0;
         });
-        if (sortByDist || this.userLocation) {
+
+        // Proximity radius filter (10, 20, 30, 40 km)
+        if (radiusFilter !== 'all') {
+          const maxKm = parseFloat(radiusFilter);
+          if (!isNaN(maxKm)) {
+            hospitals = hospitals.filter(h => h._distanceKm !== null && h._distanceKm <= maxKm);
+          }
+        }
+
+        // Distance sorting: when sortByDist is true OR near-me is active
+        if (sortByDist || this.isNearMeHospitalsActive) {
           hospitals.sort((a, b) => (a._distanceKm || 9999) - (b._distanceKm || 9999));
         }
       }
@@ -613,11 +707,12 @@ const PatientModule = {
       
       const displayedDepts = depts.slice(0, 3);
       const remainingDepts = depts.length - displayedDepts.length;
+      const hospImg = this.getHospitalImage(h);
 
       return `
         <div class="hospital-card">
           <div class="hospital-card-img-wrap">
-            <img src="${h.image_url || 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600'}" class="hospital-card-img" alt="${escapeHtml(h.name)}"/>
+            <img src="${hospImg}" class="hospital-card-img" alt="${escapeHtml(h.name)}"/>
             <span class="hospital-card-badge">★ ${h.rating || '4.8'} • NABH Certified</span>
           </div>
           <div class="hospital-card-body">
@@ -669,7 +764,7 @@ const PatientModule = {
       const docs = data.doctors || [];
 
       const imgEl = document.getElementById('hosp-modal-img');
-      if (imgEl) imgEl.src = h.image_url || 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600';
+      if (imgEl) imgEl.src = this.getHospitalImage(h);
       document.getElementById('hosp-modal-name').textContent = h.name;
       document.getElementById('hosp-modal-meta').textContent = `📍 ${h.locality}, ${h.city} • 📞 ${h.phone || h.contact_phone} • ${h.opening_hours || '24x7 Emergency'}`;
       document.getElementById('hosp-modal-address').textContent = h.address;
@@ -682,10 +777,12 @@ const PatientModule = {
       if (docs.length === 0) {
         docsListEl.innerHTML = '<p style="color:var(--text-muted); padding:10px 0;">Clinical specialist directory updating for this facility.</p>';
       } else {
-        docsListEl.innerHTML = docs.map(doc => `
+        docsListEl.innerHTML = docs.map(doc => {
+          const docAvatar = `/assets/doctors/doc_${((doc.id || 1) - 1) % 6 + 1}.jpg`;
+          return `
           <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); margin-bottom:8px;">
             <div style="display:flex; align-items:center; gap:10px;">
-              <img src="${doc.avatar_url || getInitialsAvatar(doc.doctor_name || doc.full_name, doc.id)}" onerror="this.onerror=null; this.src=getInitialsAvatar('${escapeHtml(doc.doctor_name || doc.full_name)}', ${doc.id});" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
+              <img src="${docAvatar}" onerror="this.onerror=null; this.src=getInitialsAvatar('${escapeHtml(doc.doctor_name || doc.full_name)}', ${doc.id});" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
               <div>
                 <strong style="font-size:0.88rem;">${escapeHtml(doc.doctor_name || doc.full_name)}</strong>
                 <div style="font-size:0.75rem; color:var(--text-secondary);">${escapeHtml(doc.department_name)} • ${escapeHtml(doc.specialization)}</div>
@@ -696,7 +793,8 @@ const PatientModule = {
               <button class="btn btn-teal btn-sm" style="font-size:0.72rem; padding:3px 8px; margin-top:2px;" onclick="document.getElementById('hospital-details-modal').classList.remove('active'); PatientModule.selectDoctorForBooking(${doc.id}, '${escapeHtml(doc.doctor_name || doc.full_name)}', '${escapeHtml(doc.department_name)}')">Book Slot</button>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       }
 
       document.getElementById('hospital-details-modal').classList.add('active');

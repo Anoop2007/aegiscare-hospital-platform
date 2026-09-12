@@ -74,10 +74,14 @@ const ChatbotModule = {
     let cardsHtml = '';
 
     if (cardType === 'doctor_card') {
-      cardsHtml = cards.map(c => `
+      cardsHtml = cards.map(c => {
+        const docAvatar = (c.avatar_url && c.avatar_url.startsWith('/assets/doctors/'))
+          ? c.avatar_url
+          : `/assets/doctors/doc_${((c.id || 1) - 1) % 6 + 1}.jpg`;
+        return `
         <div class="chat-card">
           <div style="display:flex; gap:10px; align-items:center; margin-bottom:6px;">
-            <img src="${c.avatar_url || getInitialsAvatar(c.name, c.id)}" onerror="this.onerror=null; this.src=getInitialsAvatar('${escapeHtml(c.name)}', ${c.id});" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid #e0f2fe; flex-shrink:0;" alt="${escapeHtml(c.name)}"/>
+            <img src="${docAvatar}" onerror="this.onerror=null; this.src=getInitialsAvatar('${escapeHtml(c.name)}', ${c.id});" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid #e0f2fe; flex-shrink:0;" alt="${escapeHtml(c.name)}"/>
             <div style="flex:1; min-width:0;">
               <div class="chat-card-title">${escapeHtml(c.name)}</div>
               <div class="chat-card-sub">${escapeHtml(c.department)} • ${escapeHtml(c.specialization)}</div>
@@ -97,12 +101,17 @@ const ChatbotModule = {
             </button>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     } else if (cardType === 'hospital_card') {
-      cardsHtml = cards.map(c => `
+      cardsHtml = cards.map(c => {
+        const hospImg = (window.PatientModule && typeof window.PatientModule.getHospitalImage === 'function')
+          ? window.PatientModule.getHospitalImage(c)
+          : (c.image_url && c.image_url.startsWith('/assets/hospitals/')) ? c.image_url : '/assets/hospitals/hosp_chennai_1.jpg';
+        return `
         <div class="chat-card">
           <div style="display:flex; gap:10px; align-items:center; margin-bottom:6px;">
-            <img src="${c.image_url || 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600'}" style="width:44px; height:44px; border-radius:8px; object-fit:cover; flex-shrink:0;" alt="${escapeHtml(c.name)}"/>
+            <img src="${hospImg}" style="width:44px; height:44px; border-radius:8px; object-fit:cover; flex-shrink:0;" alt="${escapeHtml(c.name)}"/>
             <div style="flex:1; min-width:0;">
               <div class="chat-card-title">${escapeHtml(c.name)}</div>
               <div class="chat-card-sub">📍 ${escapeHtml(c.locality || '')}, ${escapeHtml(c.city || '')}</div>
@@ -124,7 +133,8 @@ const ChatbotModule = {
             </button>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     } else if (cardType === 'appointment_card') {
       cardsHtml = cards.map(c => `
         <div class="chat-card">

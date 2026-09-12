@@ -1168,6 +1168,13 @@
                 <option value="Delhi">Delhi</option>
                 <option value="Kochi">Kochi</option>
               </select>
+              <select id="hosp-radius-filter" class="filter-select" onchange="PatientModule.filterHospitals()" title="Filter by proximity radius from user location">
+                <option value="all">All Distances</option>
+                <option value="10">Within 10 km</option>
+                <option value="20">Within 20 km</option>
+                <option value="30">Within 30 km</option>
+                <option value="40">Within 40 km</option>
+              </select>
               <input type="text" id="hosp-search-input" class="form-control" style="width:200px; padding:7px 12px; font-size:0.84rem;" placeholder="Search hospital or locality..." oninput="PatientModule.filterHospitals()" />
               <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; cursor:pointer; font-weight:500;">
                 <input type="checkbox" id="hosp-emergency-toggle" onchange="PatientModule.filterHospitals()" />
@@ -1672,7 +1679,7 @@
               <span>Encrypted WebRTC Stream • Call Duration: <strong id="telehealth-timer">00:00</strong></span>
             </div>
             <div class="doctor-stream-placeholder">
-              <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150" style="width:110px; height:110px; border-radius:50%; border:3px solid #0284c7;" alt="Doctor Stream"/>
+              <img src="/assets/doctors/doc_1.jpg" style="width:110px; height:110px; border-radius:50%; border:3px solid #0284c7; object-fit:cover;" alt="Doctor Stream"/>
               <div style="font-weight:700; font-size:1.1rem;">Dr. Priya Sharma, MD</div>
               <div style="font-size:0.8rem; color:#94a3b8;">Cardiology & Vascular Medicine • Live Feed</div>
             </div>
