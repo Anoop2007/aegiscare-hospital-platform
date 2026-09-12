@@ -581,7 +581,7 @@ const PatientModule = {
   },
 
   bookAtHospital(hospitalId, hospitalName, city) {
-    document.getElementById('book-appt-modal')?.classList.add('active');
+    this.openBookingModal();
     showToast(`Booking consultation at ${hospitalName}, ${city}`, 'info');
   },
 

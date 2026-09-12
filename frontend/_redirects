@@ -1,0 +1,6 @@
+# Netlify Redirects & API Proxy Configuration
+# If a live Render backend URL is configured, forward /api calls:
+# /api/*  https://YOUR-RENDER-APP.onrender.com/api/:splat  200
+
+# Single Page Application (SPA) Routing Rule
+/*    /index.html   200

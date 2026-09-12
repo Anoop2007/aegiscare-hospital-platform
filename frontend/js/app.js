@@ -483,10 +483,15 @@ function updateUserInterface() {
   const nameEl = document.getElementById('topbar-user-name');
   const roleEl = document.getElementById('topbar-user-role');
   const avatarEl = document.getElementById('topbar-user-avatar');
+  const avatarBadgeEl = document.getElementById('topbar-user-avatar-badge');
 
   if (nameEl) nameEl.textContent = user.full_name;
   if (roleEl) roleEl.textContent = `${user.role.toUpperCase()} ${user.mrn ? '• ' + user.mrn : ''}`;
   if (avatarEl) avatarEl.src = user.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150';
+  if (avatarBadgeEl) {
+    const initials = (user.full_name || 'US').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    avatarBadgeEl.textContent = initials;
+  }
 
   // Update role switcher buttons
   document.querySelectorAll('.role-pill-btn').forEach(btn => {

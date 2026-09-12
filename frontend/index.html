@@ -2,6 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=ai-legible&utm_source=comment&utm_medium=referral&utm_id=63381238-55f5-48f0-abfc-ce82b0313440
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+<meta name="hosting-provider" content="Netlify">
+<meta name="netlify-deploy" content="https://netlify.new/?utm_campaign=ai-legible&amp;utm_source=meta&amp;utm_medium=referral&amp;utm_id=63381238-55f5-48f0-abfc-ce82b0313440">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CareAura Health OS | Indian Hospital Resource & Availability Platform</title>
   <meta name="description" content="CareAura Health OS optimizes doctor availability, intelligent appointment scheduling, patient flow, and clinical resource allocation across Indian multi-specialty hospitals." />
@@ -1680,7 +1685,7 @@
         <!-- Interactive Prescription Pad -->
         <div style="border:1px solid var(--border-medium); border-radius:var(--radius-md); padding:16px; margin:14px 0; background:var(--bg-surface-alt);">
           <h4 style="font-size:0.92rem; margin-bottom:10px; color:var(--color-brand-primary);">Rx: Electronic Prescription Drug Pad</h4>
-          <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px; align-items:flex-end; margin-bottom:10px;">
+          <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 2fr auto; gap:8px; align-items:flex-end; margin-bottom:10px;">
             <div>
               <label class="form-label">Medication Name</label>
               <input type="text" class="form-control" id="rx-drug-name" placeholder="e.g. Amlodipine Besylate"/>
@@ -1696,6 +1701,10 @@
             <div>
               <label class="form-label">Duration</label>
               <input type="text" class="form-control" id="rx-duration" placeholder="30 days"/>
+            </div>
+            <div>
+              <label class="form-label">Instructions</label>
+              <input type="text" class="form-control" id="rx-instructions" placeholder="e.g. After food"/>
             </div>
             <button type="button" class="btn btn-teal btn-sm" onclick="DoctorModule.addPrescriptionItem()">+ Add</button>
           </div>
@@ -2119,3 +2128,4 @@
   <script src="/js/app.js"></script>
 </body>
 </html>
+<script async src="/.netlify/scripts/hud?variant=public" data-nf-variant="public" data-netlify-site-id="63381238-55f5-48f0-abfc-ce82b0313440" data-app-host="app.netlify.com"></script>

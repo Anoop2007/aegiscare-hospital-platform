@@ -9,9 +9,12 @@ const AdminModule = {
       document.getElementById('adm-stat-doctors').textContent = m.total_doctors;
       document.getElementById('adm-stat-patients').textContent = m.total_patients;
       document.getElementById('adm-stat-today-total').textContent = m.today_total_appointments;
-      document.getElementById('adm-stat-today-completed').textContent = m.today_completed;
-      document.getElementById('adm-stat-today-waiting').textContent = m.current_waiting_patients;
-      document.getElementById('adm-stat-available-docs').textContent = m.available_doctors;
+      const elCompleted = document.getElementById('adm-stat-today-completed');
+      if (elCompleted) elCompleted.textContent = m.today_completed;
+      const elWaiting = document.getElementById('adm-stat-today-waiting');
+      if (elWaiting) elWaiting.textContent = m.current_waiting_patients;
+      const elAvailDocs = document.getElementById('adm-stat-available-docs');
+      if (elAvailDocs) elAvailDocs.textContent = m.available_doctors;
 
       // Doctor availability roster cards
       const rosterContainer = document.getElementById('adm-doctor-roster-list');

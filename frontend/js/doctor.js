@@ -17,7 +17,8 @@ const DoctorModule = {
     document.getElementById('doc-stat-waiting').textContent = stats.patients_waiting;
     document.getElementById('doc-stat-inprogress').textContent = stats.in_progress;
     document.getElementById('doc-stat-completed').textContent = stats.completed;
-    document.getElementById('doc-stat-noshow').textContent = stats.no_shows;
+    const noShowEl = document.getElementById('doc-stat-noshow');
+    if (noShowEl) noShowEl.textContent = stats.no_shows;
     document.getElementById('doc-stat-workload').textContent = `${stats.workload_percentage}%`;
 
     // Toggle status button
@@ -311,11 +312,11 @@ const DoctorModule = {
   },
 
   addPrescriptionItem() {
-    const drug = document.getElementById('rx-drug-name').value.trim();
-    const dosage = document.getElementById('rx-dosage').value.trim();
-    const freq = document.getElementById('rx-frequency').value.trim();
-    const dur = document.getElementById('rx-duration').value.trim();
-    const instr = document.getElementById('rx-instructions').value.trim();
+    const drug = document.getElementById('rx-drug-name')?.value?.trim() || '';
+    const dosage = document.getElementById('rx-dosage')?.value?.trim() || '';
+    const freq = document.getElementById('rx-frequency')?.value?.trim() || '';
+    const dur = document.getElementById('rx-duration')?.value?.trim() || '';
+    const instr = document.getElementById('rx-instructions')?.value?.trim() || '';
 
     if (!drug || !dosage) {
       showToast('Please specify at least drug name and dosage.', 'error');
@@ -331,9 +332,12 @@ const DoctorModule = {
     });
 
     // Clear inputs
-    document.getElementById('rx-drug-name').value = '';
-    document.getElementById('rx-dosage').value = '';
-    document.getElementById('rx-instructions').value = '';
+    const drugEl = document.getElementById('rx-drug-name');
+    if (drugEl) drugEl.value = '';
+    const dosageEl = document.getElementById('rx-dosage');
+    if (dosageEl) dosageEl.value = '';
+    const instrEl = document.getElementById('rx-instructions');
+    if (instrEl) instrEl.value = '';
 
     this.renderPrescriptionPad();
   },
