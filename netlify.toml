@@ -1,3 +1,6 @@
+# Netlify Deployment Configuration for CareAura / AegisCare Platform
+# Base directory: Unset (defaults to repository root /)
+
 [build]
   command = "echo 'Static frontend build complete'"
   publish = "frontend"
@@ -12,4 +15,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
